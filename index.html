@@ -192,10 +192,11 @@
                 <div class="flex items-center gap-2 flex-wrap">
                     <button
                         type="button"
-                        onclick="openAdminModal()"
-                        class="rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer"
+                        onclick="toggleTtsSpeed()"
+                        id="tts-speed-toggle-btn"
+                        class="rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3.5 py-2 text-xs font-bold text-amber-900 transition cursor-pointer"
                     >
-                        ⚙ 관리자·자격 설정
+                        🐢 말하기 : 천천히
                     </button>
                     <button
                         type="button"
@@ -357,8 +358,66 @@
             </section>
 
             <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                <h2 class="text-xl font-black text-slate-900 mb-4">③ 1분 단위 및 초(秒) 읽는 법</h2>
+                <h2 class="text-xl font-black text-slate-900 mb-4">③ 1분 단위 읽는 법</h2>
                 <div id="guide-minutes1-seconds-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
+            </section>
+
+            <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-emerald-200 bg-gradient-to-br from-white to-emerald-50/40">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">④ 초(秒) 읽기 활동 (「몇 초」만 따로 연습하기)</h2>
+                        <p class="text-xs sm:text-sm text-slate-600 mt-1">
+                            시나 분과 섞지 않고 <strong>초침이 가리키는 「몇 초」</strong>만 또박또박 읽고 확인하는 전용 활동입니다.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onclick="generateSecondsPracticeRound()"
+                        class="no-print rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold shadow-sm transition cursor-pointer"
+                    >
+                        🎲 새 초 읽기 문제
+                    </button>
+                </div>
+
+                <div id="seconds-practice-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
+
+                <div class="no-print rounded-2xl bg-white border border-emerald-200 p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="text-xs font-extrabold text-emerald-800 uppercase tracking-wide">직접 「몇 초」 맞혀 보기</div>
+                        <div id="seconds-quiz-prompt" class="text-base sm:text-lg font-black text-slate-900">
+                            초침이 15초를 가리키고 있어요. 몇 초일까요?
+                        </div>
+                        <div id="seconds-quiz-feedback" class="text-xs sm:text-sm font-bold text-slate-600">
+                            숫자를 입력하거나 「몇 초」 읽어주기 버튼을 눌러 연습해 보세요.
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                        <input
+                            id="seconds-quiz-input"
+                            type="number"
+                            min="0"
+                            max="59"
+                            placeholder="초"
+                            class="w-24 rounded-xl border border-slate-300 px-3 py-2 text-center text-base font-black text-emerald-700 focus:border-emerald-500 focus:outline-none"
+                        />
+                        <span class="text-sm font-black text-slate-800">초</span>
+                        <button
+                            type="button"
+                            onclick="checkSecondsQuizAnswer()"
+                            class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold transition cursor-pointer"
+                        >
+                            정답 확인
+                        </button>
+                        <button
+                            type="button"
+                            onclick="speakSecondsQuizAnswer()"
+                            class="rounded-xl bg-indigo-100 hover:bg-indigo-200 text-indigo-900 px-3.5 py-2 text-xs font-bold transition cursor-pointer"
+                        >
+                            🔊 「몇 초」 듣기
+                        </button>
+                    </div>
+                </div>
             </section>
         </main>
 
@@ -524,6 +583,9 @@
             chiefAdminEmail: null,
             currentUserEmail: '',
             inviteCode: 'TORY-CLOCK-2026',
+            ttsRate: 0.72,
+            secondsQuizTarget: 15,
+            secondsCards: [5, 15, 30, 45],
             managers: [
                 { email: 'co-therapist@tory-clock.kr', role: '문제·일과 관리' }
             ],
@@ -805,11 +867,48 @@
                 return;
             }
             window.speechSynthesis.cancel();
-            const utter = new SpeechSynthesisUtterance(text);
+
+            // 유치원생에게 말하듯 단위·문장 사이를 또박또박 끊어서 발음
+            const articulatedText = String(text)
+                .replace(/\s+/g, ' ')
+                .replace(/([시분초])\s*/g, '$1, ')
+                .replace(/,\s*,/g, ', ')
+                .trim();
+
+            const utter = new SpeechSynthesisUtterance(articulatedText);
             utter.lang = 'ko-KR';
-            utter.rate = 0.95;
+            utter.rate = state.ttsRate || 0.72;
+            utter.pitch = 1.05;
+
+            const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+            const koreanVoice = voices.find((v) => v && v.lang && v.lang.toLowerCase().startsWith('ko'));
+            if (koreanVoice) {
+                utter.voice = koreanVoice;
+            }
+
             window.speechSynthesis.speak(utter);
             showToast(`🔊 ${text}`);
+        }
+
+        function toggleTtsSpeed() {
+            if (state.ttsRate > 0.65) {
+                state.ttsRate = 0.58;
+            } else {
+                state.ttsRate = 0.72;
+            }
+            updateTtsSpeedButton();
+            const spokenGuide = state.ttsRate <= 0.62 ? '더 천천히 말해요' : '천천히 말해요';
+            speakText(spokenGuide);
+        }
+
+        function updateTtsSpeedButton() {
+            const btn = document.getElementById('tts-speed-toggle-btn');
+            if (!btn) return;
+            if (state.ttsRate <= 0.62) {
+                btn.textContent = '🐢 말하기 : 더 천천히';
+            } else {
+                btn.textContent = '🐢 말하기 : 천천히';
+            }
         }
 
         function speakCurrentMainTime() {
@@ -1011,12 +1110,105 @@
                 const items = [
                     { h: 1, m: 1, label: '한 시 일 분', digital: '1:01' },
                     { h: 2, m: 7, label: '두 시 칠 분', digital: '2:07' },
-                    { h: 3, m: 30, label: '세 시 삼십 분 (60초=1분)', digital: '3:30:60' }
+                    { h: 3, m: 30, label: '세 시 삼십 분', digital: '3:30' }
                 ];
                 items.forEach((it) => {
                     extraGrid.appendChild(createGuideCard(it.h, it.m, it.label, it.digital));
                 });
             }
+
+            renderSecondsPracticeSection();
+        }
+
+        function createSecondsOnlyCard(secondsVal) {
+            const card = document.createElement('div');
+            card.className = 'rounded-2xl bg-white border border-emerald-200 p-4 flex flex-col items-center justify-between gap-3 shadow-2xs';
+
+            const secText = `${secondsVal}초`;
+            const clockId = `sec-only-clock-${secondsVal}-${Math.random().toString(36).slice(2, 6)}`;
+            const secAngle = secondsVal * 6;
+
+            card.innerHTML = `
+                <div class="w-full flex items-center justify-between gap-2">
+                    <span class="rounded-full bg-emerald-100 text-emerald-900 px-2.5 py-0.5 text-xs font-extrabold">초 읽기</span>
+                    <button
+                        type="button"
+                        onclick="speakText('${secText}')"
+                        class="rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 px-2.5 py-1 text-xs font-bold cursor-pointer"
+                    >
+                        🔊 「${secText}」 듣기
+                    </button>
+                </div>
+                <div id="${clockId}" class="clock-face clock-face-sm">
+                    <div
+                        class="clock-hand"
+                        style="width: 3px; margin-left: -1.5px; height: 56px; background: #10b981; z-index: 25; transform: translateX(-50%) rotate(${secAngle}deg);"
+                    ></div>
+                    <div class="clock-center-cap"></div>
+                </div>
+                <div class="w-full text-center rounded-xl bg-emerald-950 text-emerald-300 py-2 text-xl font-black tracking-wide">
+                    ${secText}
+                </div>
+            `;
+
+            setTimeout(() => buildClockDialMarks(clockId, 148), 0);
+            return card;
+        }
+
+        function renderSecondsPracticeSection() {
+            const grid = document.getElementById('seconds-practice-grid');
+            if (grid) {
+                grid.innerHTML = '';
+                state.secondsCards.forEach((sec) => {
+                    grid.appendChild(createSecondsOnlyCard(sec));
+                });
+            }
+
+            const promptEl = document.getElementById('seconds-quiz-prompt');
+            if (promptEl) {
+                promptEl.textContent = `초침이 ${state.secondsQuizTarget}초를 가리키고 있어요. 몇 초일까요?`;
+            }
+        }
+
+        function generateSecondsPracticeRound() {
+            const presetChoices = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+            const shuffled = [...presetChoices].sort(() => Math.random() - 0.5);
+            state.secondsCards = shuffled.slice(0, 4).sort((a, b) => a - b);
+            state.secondsQuizTarget = state.secondsCards[Math.floor(Math.random() * state.secondsCards.length)];
+
+            const inputEl = document.getElementById('seconds-quiz-input');
+            const feedbackEl = document.getElementById('seconds-quiz-feedback');
+            if (inputEl) inputEl.value = '';
+            if (feedbackEl) {
+                feedbackEl.textContent = '시나 분 없이 「몇 초」만 말해 보거나 숫자를 적어 보세요.';
+            }
+
+            renderSecondsPracticeSection();
+            speakText(`${state.secondsQuizTarget}초`);
+        }
+
+        function checkSecondsQuizAnswer() {
+            const inputEl = document.getElementById('seconds-quiz-input');
+            const feedbackEl = document.getElementById('seconds-quiz-feedback');
+            if (!inputEl || !feedbackEl) return;
+
+            const userVal = parseInt(inputEl.value, 10);
+            if (Number.isNaN(userVal)) {
+                feedbackEl.innerHTML = '<span class="text-amber-700">먼저 초 숫자를 입력해 주세요.</span>';
+                return;
+            }
+
+            if (userVal === state.secondsQuizTarget) {
+                feedbackEl.innerHTML = `<span class="text-emerald-700 font-black">🎉 맞았어요! 「${state.secondsQuizTarget}초」예요.</span>`;
+                speakText(`${state.secondsQuizTarget}초`);
+            } else {
+                feedbackEl.innerHTML = `<span class="text-rose-700 font-black">아쉬워요, 이 문제는 「${state.secondsQuizTarget}초」예요.</span>`;
+                speakText(`${state.secondsQuizTarget}초`);
+            }
+        }
+
+        function speakSecondsQuizAnswer() {
+            speakText(`${state.secondsQuizTarget}초`);
         }
 
         function setCalcDirection(dir) {
@@ -1340,13 +1532,34 @@
         function renderManagersList() {
             const box = document.getElementById('managers-permission-list');
             if (!box) return;
+            box.innerHTML = '';
+            state.managers.forEach((m, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs';
+                row.innerHTML = `
+                    <div><strong class="text-slate-800">${m.email}</strong> · <span class="text-indigo-700 font-bold">${m.role}</span></div>
+                    <button type="button" onclick="removeManagerRole(${idx})" class="text-rose-600 font-bold cursor-pointer">삭제</button>
+                `;
+                box.appendChild(row);
+            });
+        }
+
+        function addManagerRole() {
+            if (state.currentUserEmail !== state.chiefAdminEmail) {
+                showToast('최종관리자(1인)만 관리인 권한을 설정할 수 있습니다.');
+                return;
+            }
             const emailEl = document.getElementById('new-manager-email');
             const roleEl = document.getElementById('new-manager-role');
-            const email = (emailEl.value || '').trim();
-            if (!email) return;
-            state.managers.push({ email, role: roleEl.value });
+            const email = (emailEl && emailEl.value ? emailEl.value.trim() : '');
+            if (!email) {
+                showToast('관리인 이메일을 입력해 주세요.');
+                return;
+            }
+            state.managers.push({ email, role: roleEl ? roleEl.value : '문제·일과 관리' });
             emailEl.value = '';
             renderManagersList();
+            showToast('관리인 권한이 추가되었습니다.');
         }
 
         function removeManagerRole(idx) {
@@ -1405,20 +1618,4 @@
         }
     </script>
 </body>
-</html>            box.innerHTML = '';
-            state.managers.forEach((m, idx) => {
-                const row = document.createElement('div');
-                row.className = 'flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs';
-                row.innerHTML = `
-                    <div><strong class="text-slate-800">${m.email}</strong> · <span class="text-indigo-700 font-bold">${m.role}</span></div>
-                    <button type="button" onclick="removeManagerRole(${idx})" class="text-rose-600 font-bold cursor-pointer">삭제</button>
-                `;
-                box.appendChild(row);
-            });
-        }
-
-        function addManagerRole() {
-            if (state.currentUserEmail !== state.chiefAdminEmail) {
-                showToast('최종관리자(1인)만 관리인 권한을 설정할 수 있습니다.');
-                return;
-            }
+</html>
