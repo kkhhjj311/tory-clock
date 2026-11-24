@@ -21,7 +21,6 @@
             padding: 0;
         }
 
-        /* 아날로그 시계 원판 */
         .clock-face {
             position: relative;
             width: 240px;
@@ -190,6 +189,13 @@
                 </div>
 
                 <div class="flex items-center gap-2 flex-wrap">
+                    <button
+                        type="button"
+                        onclick="openAdminModal()"
+                        class="rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-800 transition cursor-pointer"
+                    >
+                        ⚙ 관리자·자격 설정
+                    </button>
                     <button
                         type="button"
                         onclick="toggleTtsSpeed()"
@@ -388,7 +394,7 @@
                             초침이 15초를 가리키고 있어요. 몇 초일까요?
                         </div>
                         <div id="seconds-quiz-feedback" class="text-xs sm:text-sm font-bold text-slate-600">
-                            숫자를 입력하거나 「몇 초」 읽어주기 버튼을 눌러 연습해 보세요.
+                            숫자를 입력하거나 「몇 초」 듣기 버튼을 눌러 연습해 보세요.
                         </div>
                     </div>
 
@@ -670,7 +676,7 @@
             document.getElementById('app-main-shell').classList.remove('hidden');
             updateUserHeaderBadges();
             renderAllModes();
-            showToast(`토리쌤의 재밌게 공부하자 (시계편)에 접속했습니다.`);
+            showToast('토리쌤의 재밌게 공부하자 (시계편)에 접속했습니다.');
         }
 
         function logoutToGate() {
@@ -868,7 +874,6 @@
             }
             window.speechSynthesis.cancel();
 
-            // 유치원생에게 말하듯 단위·문장 사이를 또박또박 끊어서 발음
             const articulatedText = String(text)
                 .replace(/\s+/g, ' ')
                 .replace(/([시분초])\s*/g, '$1, ')
@@ -1279,7 +1284,7 @@
 
             if (userH === ansHour && userM === ansMinute) {
                 fb.innerHTML = `<span class="text-emerald-700">🎉 정답입니다! (${ansHour}시 ${ansMinute}분)</span>`;
-                speakText(`정답입니다! ${KOREAN_HOURS[ansHour]} 시 ${ansMinute} 분이에요.`);
+                speakText(`${ansHour}시 ${ansMinute}분이에요`);
             } else {
                 fb.innerHTML = `<span class="text-rose-700">정답은 ${ansHour}시 ${ansMinute}분이에요.</span>`;
             }
@@ -1287,7 +1292,7 @@
 
         function speakCalcAnswer() {
             const { ansHour, ansMinute } = getCalcAnswerTime();
-            speakText(`정답은 ${KOREAN_HOURS[ansHour]} 시 ${ansMinute} 분입니다.`);
+            speakText(`${ansHour}시 ${ansMinute}분이에요`);
         }
 
         function initMatchingGame() {
@@ -1425,7 +1430,7 @@
                             <div class="clock-hand minute-hand" style="height: 54px; transform: translateX(-50%) rotate(${minuteAngle}deg);"></div>
                             <div class="clock-center-cap"></div>
                         </div>
-                        <button type="button" onclick="speakText('${item.title} 시간은 ${KOREAN_HOURS[item.hour]} 시 ${item.minute} 분입니다.')" class="no-print rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold cursor-pointer">
+                        <button type="button" onclick="speakText('${item.hour}시 ${item.minute}분에 ${item.title}')" class="no-print rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold cursor-pointer">
                             🔊 듣기
                         </button>
                     </div>
