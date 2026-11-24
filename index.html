@@ -1,18 +1,4 @@
-}
-        }
-
-        function createGuideCard(hour, minute, spokenText, digitalBadgeText) {
-            const card = document.createElement('div');
-            card.className = 'rounded-2xl bg-slate-50 border border-slate-200 p-4 flex flex-col items-center justify-between gap-3';
-
-            const clockId = `guide-clock-${hour}-${minute}-${Math.random().toString(36).slice(2, 6)}`;
-            const { hourAngle, minuteAngle } = getHandAngles(hour, minute);
-
-            card.innerHTML = `
-                <div class="w-full flex items-center justify-between">
-                    <span class="text-sm font-black text-slate-800">${spokenText}</span>
-                    <button type="button" onclick="speakText('${spokenText}')" class="rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-800 px-2.5 py-1 text-xs font-bold cursor-pointer">
-                        🔊 듣기<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8" />
@@ -43,7 +29,7 @@
             border-radius: 9999px;
             background: radial-gradient(circle at center, #ffffff 68%, #f1f5f9 100%);
             border: 8px solid #1e293b;
-            box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.18), inset 0 2px 8px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.16), inset 0 2px 8px rgba(15, 23, 42, 0.08);
             margin: 0 auto;
             user-select: none;
             touch-action: none;
@@ -98,7 +84,6 @@
             z-index: 20;
         }
 
-        /* 인쇄 시 제어 버튼 숨김 */
         @media print {
             .no-print {
                 display: none !important;
@@ -115,19 +100,19 @@
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
 
-    <!-- 전역 알림 배너 -->
-    <div id="global-toast" class="fixed bottom-5 right-5 z-50 hidden max-w-md rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white shadow-xl transition-all">
+    <!-- 전역 알림 토스트 -->
+    <div id="global-toast" class="fixed bottom-5 right-5 z-50 hidden max-w-md rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white shadow-xl">
         <span id="global-toast-text">알림 메시지</span>
     </div>
 
     <!-- ========================================================= -->
-    <!-- 1. 비공개 로그인 & 최종관리자(1인) 진입 화면                -->
+    <!-- 1. 비공개 로그인 & 최초 로그인 최종관리자(1인) 등록 화면    -->
     <!-- ========================================================= -->
     <section id="auth-gate-screen" class="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-indigo-50 via-white to-sky-50">
-        <div class="w-full max-w-xl rounded-3xl bg-white p-6 sm:p-8 shadow-xl border border-slate-200">
-            <div class="flex items-center justify-between gap-3 mb-5">
+        <div class="w-full max-w-lg rounded-3xl bg-white p-6 sm:p-8 shadow-xl border border-slate-200">
+            <div class="flex items-center justify-between gap-2 mb-5 flex-wrap">
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-800">
-                    🔒 토리쌤의 재밌게 공부하자 (시계편) · 비공개 워크스페이스
+                    🔒 비공개 학습 워크스페이스
                 </span>
                 <span id="chief-status-badge" class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
                     최초 로그인 시 최종관리자 등록
@@ -138,36 +123,18 @@
                 토리쌤의 재밌게 공부하자 (시계편)
             </h1>
             <p class="text-sm text-slate-600 leading-relaxed mb-6">
-                최초로 로그인한 계정이 <strong>최종관리자(1인)</strong>로 등록되며, 참여 코드·초대 링크·관리인 권한 및 언어재활사 자격증 사진 승인을 직접 관리할 수 있습니다.
+                처음 로그인하는 계정이 <strong>최종관리자(1인)</strong>로 등록됩니다. 로그인하면 바로 활동지로 이동합니다.
             </p>
 
-            <!-- 빠른 접속 버튼 -->
-            <div class="mb-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                        <div class="text-xs font-bold text-emerald-800">바로 시작하기</div>
-                        <div class="text-xs text-emerald-700 mt-0.5">버튼을 누르면 즉시 '토리쌤의 재밌게 공부하자 (시계편)' 활동지로 들어가 최종관리자 기능을 바로 쓸 수 있습니다.</div>
-                    </div>
-                    <button
-                        type="button"
-                        id="quick-enter-btn"
-                        onclick="quickEnterChiefWorkspace()"
-                        class="shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] px-5 py-3 text-sm font-extrabold text-white shadow-md transition cursor-pointer"
-                    >
-                        바로 활동지 들어가기
-                    </button>
-                </div>
-            </div>
-
-            <!-- 이메일 및 참여 코드 로그인 폼 -->
             <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
                 <div>
                     <label for="login-email-input" class="block text-xs font-bold text-slate-700 mb-1">
-                        이메일 주소 (최종관리자 / 관리인 / 참여자)
+                        이메일 주소
                     </label>
                     <input
                         id="login-email-input"
                         type="email"
+                        required
                         placeholder="예: tory@clinic.kr"
                         class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                     />
@@ -175,7 +142,7 @@
 
                 <div>
                     <label for="login-code-input" class="block text-xs font-bold text-slate-700 mb-1">
-                        참여 코드 (비공개 초대 코드 — 최종관리자 첫 접속 시 자동 통과)
+                        참여 코드 (최초 최종관리자 등록 시 비워두거나 입력 가능)
                     </label>
                     <input
                         id="login-code-input"
@@ -189,23 +156,21 @@
                     type="submit"
                     class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 py-3 text-sm font-bold text-white shadow transition cursor-pointer"
                 >
-                    이메일로 로그인 및 접속하기
+                    로그인
                 </button>
             </form>
 
-            <!-- 접근 차단 안내 영역 -->
             <div id="access-denied-box" class="hidden mt-4 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs text-rose-800 font-semibold">
-                접근 권한이 확인되지 않았습니다. 최종관리자에게 받은 참여 코드를 확인하거나 [바로 활동지 들어가기]를 눌러 주세요.
+                참여 코드가 일치하지 않습니다. 최종관리자에게 받은 참여 코드를 확인해 주세요.
             </div>
         </div>
     </section>
 
     <!-- ========================================================= -->
-    <!-- 2. 메인 활동지 앱 셸                                       -->
+    <!-- 2. 메인 활동지 화면                                       -->
     <!-- ========================================================= -->
     <div id="app-main-shell" class="hidden min-h-screen flex flex-col">
 
-        <!-- 상단 헤더 & 모드 전환 바 -->
         <header class="no-print sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
@@ -214,13 +179,13 @@
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="font-black text-base sm:text-lg text-slate-900">토리쌤의 재밌게 공부하자 (시계편)</span>
                             <span id="current-role-badge" class="rounded-full bg-indigo-100 text-indigo-800 px-2.5 py-0.5 text-xs font-bold">
-                                최종관리자
+                                최종관리자 (1인)
                             </span>
                             <span id="slp-verified-badge" class="hidden rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 text-xs font-bold">
                                 ✔ 언어재활사 인증됨
                             </span>
                         </div>
-                        <p id="current-user-email-display" class="text-xs text-slate-500">tory-admin@tory-clock.local</p>
+                        <p id="current-user-email-display" class="text-xs text-slate-500"></p>
                     </div>
                 </div>
 
@@ -249,7 +214,6 @@
                 </div>
             </div>
 
-            <!-- 6가지 활동 모드 탭 -->
             <nav class="max-w-7xl mx-auto px-4 sm:px-6 pb-3 flex gap-2 overflow-x-auto">
                 <button type="button" id="tab-btn-1" onclick="switchMode(1)" class="mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow cursor-pointer">
                     1. 시계 읽기·그리기·말하기
@@ -272,23 +236,20 @@
             </nav>
         </header>
 
-        <!-- 활동지 인쇄용 이름/날짜 헤더 -->
         <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5">
             <div class="print-card rounded-2xl bg-white border border-slate-200 px-5 py-3 flex flex-wrap items-center justify-between gap-4 text-sm">
                 <div class="font-bold text-slate-700">📅 날짜: <span class="inline-block w-36 border-b border-dashed border-slate-400"></span></div>
                 <div class="font-bold text-slate-700">🧒 이름: <span class="inline-block w-36 border-b border-dashed border-slate-400"></span></div>
-                <div class="font-bold text-slate-700">🎯 활동 목표: <span class="text-indigo-700">토리쌤의 재밌게 공부하자 (시계편)</span></div>
+                <div class="font-bold text-slate-700">🎯 활동지: <span class="text-indigo-700">토리쌤의 재밌게 공부하자 (시계편)</span></div>
             </div>
         </div>
 
-        <!-- ======================================================= -->
-        <!-- 모드 1: 기본 시계 읽기 · 그리기 · 말하기 (STT / TTS)       -->
-        <!-- ======================================================= -->
+        <!-- 모드 1 -->
         <main id="mode-panel-1" class="mode-panel max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
             <section class="no-print print-card rounded-3xl bg-white p-5 sm:p-6 shadow-sm border border-slate-200">
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div class="flex flex-wrap items-center gap-3">
-                        <span class="text-sm font-extrabold text-slate-800">⏰ 시각 설정 (00:00)</span>
+                        <span class="text-sm font-extrabold text-slate-800">⏰ 시각 설정</span>
                         <div class="flex items-center gap-1.5 bg-slate-100 p-2 rounded-2xl">
                             <input
                                 id="input-hour"
@@ -317,23 +278,23 @@
 
                     <div class="flex flex-wrap items-center gap-2">
                         <button type="button" onclick="speakCurrentMainTime()" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
-                            🔊 AI 음성 듣기
+                            🔊 음성 듣기
                         </button>
-                        <button type="button" id="mic-answer-btn" onclick="startSpeechGrading()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
+                        <button type="button" onclick="startSpeechGrading()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
                             🎤 말로 답하기
                         </button>
-                        <button type="button" id="toggle-digital-hide-btn" onclick="toggleDigitalHidden()" class="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-3.5 py-2 text-xs font-bold cursor-pointer">
+                        <button type="button" onclick="toggleDigitalHidden()" class="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-3.5 py-2 text-xs font-bold cursor-pointer">
                             🙈 디지털 가리기
                         </button>
-                        <button type="button" id="toggle-draw-mode-btn" onclick="toggleHandDrawMode()" class="rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-900 px-3.5 py-2 text-xs font-bold cursor-pointer">
-                            ✏ 바늘 그리기 모드
+                        <button type="button" onclick="toggleHandDrawMode()" class="rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-900 px-3.5 py-2 text-xs font-bold cursor-pointer">
+                            ✏ 바늘 그리기
                         </button>
                     </div>
                 </div>
 
-                <div id="speech-feedback-bar" class="mt-4 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2">
+                <div class="mt-4 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2">
                     <div id="speech-feedback-text" class="font-semibold text-slate-700">
-                        시각을 입력하거나 <strong>🎤 말로 답하기</strong> 버튼을 눌러 시각을 말해 보세요.
+                        시각을 바꾸거나 <strong>🎤 말로 답하기</strong>를 눌러 시각을 말해 보세요.
                     </div>
                     <span id="korean-time-phrase" class="rounded-lg bg-indigo-50 text-indigo-800 px-3 py-1 text-xs font-extrabold">
                         세 시 십오 분
@@ -345,10 +306,10 @@
                 <div class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col items-center justify-between">
                     <div class="w-full flex items-center justify-between mb-4">
                         <span class="text-base font-black text-slate-800">💻 디지털 시계</span>
-                        <span class="text-xs font-bold text-slate-400"><span class="text-rose-500">■ 시(Hour)</span> · <span class="text-blue-600">■ 분(Minute)</span></span>
+                        <span class="text-xs font-bold text-slate-400"><span class="text-rose-500">■ 시</span> · <span class="text-blue-600">■ 분</span></span>
                     </div>
 
-                    <div id="digital-clock-display" class="my-6 rounded-3xl bg-slate-900 px-8 py-6 text-5xl sm:text-6xl font-black tracking-wider shadow-inner">
+                    <div id="digital-clock-display" class="my-6 rounded-3xl bg-slate-900 px-8 py-6 text-5xl sm:text-6xl font-black tracking-wider">
                         <span id="digital-hour-text" class="text-rose-400">03</span><span class="text-slate-400 mx-1">:</span><span id="digital-minute-text" class="text-sky-400">15</span>
                     </div>
 
@@ -357,12 +318,12 @@
                         <button type="button" onclick="toggleDigitalHidden()" class="rounded-xl bg-indigo-600 text-white px-4 py-1.5 text-xs font-bold cursor-pointer">정답 보기</button>
                     </div>
 
-                    <p class="text-xs text-slate-500 font-medium">빨간색 숫자는 <strong>시</strong>, 파란색 숫자는 <strong>분</strong>을 나타냅니다.</p>
+                    <p class="text-xs text-slate-500 font-medium">빨간 숫자는 <strong>시</strong>, 파란 숫자는 <strong>분</strong>입니다.</p>
                 </div>
 
                 <div class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col items-center">
                     <div class="w-full flex items-center justify-between mb-4">
-                        <span class="text-base font-black text-slate-800">⭕ 동그라미 바늘 시계</span>
+                        <span class="text-base font-black text-slate-800">⭕ 동그라미 시계</span>
                         <span class="text-xs font-bold text-slate-400"><span class="text-rose-500">━ 시침</span> · <span class="text-blue-600">━ 분침</span></span>
                     </div>
 
@@ -374,79 +335,54 @@
                     </div>
 
                     <div id="draw-toolbar" class="no-print hidden mt-4 w-full rounded-2xl bg-purple-50 border border-purple-200 p-3 flex flex-wrap items-center justify-center gap-2">
-                        <button type="button" id="pen-tool-hour" onclick="setDrawTool('hour')" class="rounded-xl bg-rose-600 text-white px-3 py-1.5 text-xs font-bold cursor-pointer">시침 그리기(빨강)</button>
-                        <button type="button" id="pen-tool-minute" onclick="setDrawTool('minute')" class="rounded-xl bg-white text-blue-700 border border-blue-300 px-3 py-1.5 text-xs font-bold cursor-pointer">분침 그리기(파랑)</button>
+                        <button type="button" onclick="setDrawTool('hour')" class="rounded-xl bg-rose-600 text-white px-3 py-1.5 text-xs font-bold cursor-pointer">시침 그리기</button>
+                        <button type="button" onclick="setDrawTool('minute')" class="rounded-xl bg-blue-600 text-white px-3 py-1.5 text-xs font-bold cursor-pointer">분침 그리기</button>
                         <button type="button" onclick="clearDrawnHands()" class="rounded-xl bg-white text-slate-700 border border-slate-300 px-3 py-1.5 text-xs font-bold cursor-pointer">지우기</button>
-                        <button type="button" onclick="checkDrawnHands()" class="rounded-xl bg-purple-700 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">정답 바늘 비교</button>
+                        <button type="button" onclick="checkDrawnHands()" class="rounded-xl bg-purple-700 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">정답 비교</button>
                     </div>
                 </div>
             </section>
         </main>
 
-        <!-- ======================================================= -->
-        <!-- 모드 2: 시·분·초 읽는 법 기초 가이드 (한 줄 3개 · TTS)      -->
-        <!-- ======================================================= -->
+        <!-- 모드 2 -->
         <main id="mode-panel-2" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-8">
             <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                <div class="mb-5">
-                    <h2 class="text-xl font-black text-slate-900">① 시(時) 읽는 법 — 한 시부터 열두 시까지</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">스피커(🔊)를 누르면 AI 음성이 시 읽는 법을 읽어줍니다. (한 줄에 3개씩 큰 시계 표시)</p>
-                </div>
+                <h2 class="text-xl font-black text-slate-900 mb-4">① 시(時) 읽는 법 (한 시 ~ 열두 시)</h2>
                 <div id="guide-hours-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
             </section>
 
             <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                <div class="mb-5">
-                    <h2 class="text-xl font-black text-slate-900">② 분(分) 읽는 법 — 5분 단위 (5분 ~ 55분)</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">큰 숫자 한 칸이 5분씩 늘어나요. 스피커(🔊)를 눌러 분 발음을 들어보세요.</p>
-                </div>
+                <h2 class="text-xl font-black text-slate-900 mb-4">② 분(分) 읽는 법 (5분 ~ 55분)</h2>
                 <div id="guide-minutes5-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
             </section>
 
             <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                <div class="mb-5">
-                    <h2 class="text-xl font-black text-slate-900">③ 1분 단위 및 초(秒) 읽는 법</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">작은 눈금 한 칸은 1분, 초침이 한 바퀴 돌면 60초(1분)가 됩니다.</p>
-                </div>
+                <h2 class="text-xl font-black text-slate-900 mb-4">③ 1분 단위 및 초(秒) 읽는 법</h2>
                 <div id="guide-minutes1-seconds-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
             </section>
         </main>
 
-        <!-- ======================================================= -->
-        <!-- 모드 3: 몇 분 전 · 몇 분 후 계산하기 (직접 문제내기 포함)     -->
-        <!-- ======================================================= -->
+        <!-- 모드 3 -->
         <main id="mode-panel-3" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
             <section class="no-print print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                <h2 class="text-lg font-black text-slate-900 mb-3">✏ 토리쌤 직접 문제내기 (+ / - 및 분 설정)</h2>
+                <h2 class="text-lg font-black text-slate-900 mb-3">✏ 직접 문제내기 (+ / - 분)</h2>
                 <div class="flex flex-wrap items-center gap-3">
-                    <span class="text-xs font-bold text-slate-600">기준 시각:</span>
                     <input id="calc-base-hour" type="number" min="1" max="12" value="4" class="w-16 rounded-xl border border-slate-300 px-2 py-1.5 text-center font-bold" />
                     <span>시</span>
                     <input id="calc-base-minute" type="number" min="0" max="59" value="20" class="w-16 rounded-xl border border-slate-300 px-2 py-1.5 text-center font-bold" />
                     <span>분</span>
-
-                    <div class="inline-flex rounded-xl overflow-hidden border border-slate-300">
-                        <button type="button" id="calc-dir-plus" onclick="setCalcDirection(1)" class="px-3.5 py-1.5 text-xs font-extrabold bg-indigo-600 text-white cursor-pointer">+ 후 (PLUS)</button>
-                        <button type="button" id="calc-dir-minus" onclick="setCalcDirection(-1)" class="px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer">- 전 (MINUS)</button>
-                    </div>
-
+                    <button type="button" id="calc-dir-plus" onclick="setCalcDirection(1)" class="rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-indigo-600 text-white cursor-pointer">+ 후</button>
+                    <button type="button" id="calc-dir-minus" onclick="setCalcDirection(-1)" class="rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer">- 전</button>
                     <input id="calc-delta-minutes" type="number" min="1" max="120" value="15" class="w-20 rounded-xl border border-slate-300 px-2 py-1.5 text-center font-bold" />
-                    <span class="text-xs font-bold text-slate-700">분</span>
-
-                    <button type="button" onclick="applyCustomCalcProblem()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
-                        문제 적용하기
-                    </button>
-                    <button type="button" onclick="generateRandomCalcProblem()" class="rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 px-4 py-2 text-xs font-bold cursor-pointer">
-                        🎲 랜덤 문제
-                    </button>
+                    <span>분</span>
+                    <button type="button" onclick="applyCustomCalcProblem()" class="rounded-xl bg-emerald-600 text-white px-4 py-2 text-xs font-bold cursor-pointer">문제 적용</button>
+                    <button type="button" onclick="generateRandomCalcProblem()" class="rounded-xl bg-amber-100 text-amber-900 px-4 py-2 text-xs font-bold cursor-pointer">🎲 랜덤</button>
                 </div>
             </section>
 
             <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
                 <div class="flex flex-col items-center">
-                    <div id="calc-question-prompt" class="text-xl font-black text-indigo-700 mb-4 text-center">
-                        4시 20분에서 15분 후는 몇 시 몇 분일까요?
-                    </div>
+                    <div id="calc-question-prompt" class="text-xl font-black text-indigo-700 mb-4 text-center"></div>
                     <div id="calc-analog-clock" class="clock-face">
                         <div id="calc-hour-hand" class="clock-hand hour-hand" style="height: 60px;"></div>
                         <div id="calc-minute-hand" class="clock-hand minute-hand" style="height: 88px;"></div>
@@ -455,7 +391,6 @@
                 </div>
 
                 <div class="space-y-4">
-                    <div class="text-sm font-bold text-slate-700">정답 입력하기</div>
                     <div class="flex items-center gap-2">
                         <input id="calc-ans-hour" type="number" min="1" max="12" placeholder="시" class="w-24 rounded-xl border border-slate-300 px-3 py-2 text-center text-lg font-bold" />
                         <span class="font-bold">시</span>
@@ -463,107 +398,81 @@
                         <span class="font-bold">분</span>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <button type="button" onclick="checkCalcAnswer()" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 text-sm font-bold cursor-pointer">정답 확인</button>
-                        <button type="button" onclick="speakCalcAnswer()" class="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 text-sm font-bold cursor-pointer">🔊 정답 음성 듣기</button>
+                        <button type="button" onclick="checkCalcAnswer()" class="rounded-xl bg-indigo-600 text-white px-5 py-2.5 text-sm font-bold cursor-pointer">정답 확인</button>
+                        <button type="button" onclick="speakCalcAnswer()" class="rounded-xl bg-slate-100 text-slate-800 px-4 py-2.5 text-sm font-bold cursor-pointer">🔊 정답 듣기</button>
                     </div>
-                    <div id="calc-result-feedback" class="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 text-sm font-bold text-slate-700">
-                        계산한 시와 분을 입력하고 [정답 확인]을 눌러 보세요.
-                    </div>
+                    <div id="calc-result-feedback" class="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 text-sm font-bold text-slate-700"></div>
                 </div>
             </section>
         </main>
 
-        <!-- ======================================================= -->
-        <!-- 모드 4: 시계 짝짓기 활동                                -->
-        <!-- ======================================================= -->
+        <!-- 모드 4 -->
         <main id="mode-panel-4" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
             <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-                    <div>
-                        <h2 class="text-xl font-black text-slate-900">🔗 동그라미 시계와 디지털 시각 짝짓기</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">왼쪽 시계를 누른 뒤 오른쪽에서 같은 시각 카드를 선택해 연결하세요.</p>
-                    </div>
-                    <button type="button" onclick="initMatchingGame()" class="no-print rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
-                        🔄 새 짝짓기 문제
-                    </button>
+                <div class="flex items-center justify-between gap-3 mb-6">
+                    <h2 class="text-xl font-black text-slate-900">🔗 시계 짝짓기</h2>
+                    <button type="button" onclick="initMatchingGame()" class="no-print rounded-xl bg-indigo-600 text-white px-4 py-2 text-xs font-bold cursor-pointer">🔄 새 문제</button>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div id="matching-clocks-col" class="space-y-4"></div>
                     <div id="matching-labels-col" class="space-y-4"></div>
                 </div>
-
-                <div id="matching-status-banner" class="mt-6 rounded-2xl bg-indigo-50 border border-indigo-200 p-4 text-sm font-bold text-indigo-900">
-                    짝을 맞춰 보세요! (0 / 4 완료)
-                </div>
+                <div id="matching-status-banner" class="mt-6 rounded-2xl bg-indigo-50 border border-indigo-200 p-4 text-sm font-bold text-indigo-900"></div>
             </section>
         </main>
 
-        <!-- ======================================================= -->
-        <!-- 모드 5: 하루 일과와 시계 연결하기 (한 줄 1개 · 직접 추가)   -->
-        <!-- ======================================================= -->
+        <!-- 모드 5 -->
         <main id="mode-panel-5" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
             <section class="no-print print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                <h2 class="text-lg font-black text-slate-900 mb-3">➕ 우리 아동 맞춤 하루 일과 추가하기</h2>
+                <h2 class="text-lg font-black text-slate-900 mb-3">➕ 하루 일과 추가</h2>
                 <div class="flex flex-wrap items-center gap-3">
-                    <input id="routine-title-input" type="text" placeholder="예: 토리쌤과 언어치료 수업" class="flex-1 min-w-[180px] rounded-xl border border-slate-300 px-3.5 py-2 text-sm font-semibold" />
+                    <input id="routine-title-input" type="text" placeholder="예: 언어재활 수업" class="flex-1 min-w-[180px] rounded-xl border border-slate-300 px-3.5 py-2 text-sm font-semibold" />
                     <input id="routine-hour-input" type="number" min="1" max="12" value="2" class="w-20 rounded-xl border border-slate-300 px-2 py-2 text-center text-sm font-bold" />
                     <span class="text-sm font-bold">시</span>
                     <input id="routine-minute-input" type="number" min="0" max="59" value="30" class="w-20 rounded-xl border border-slate-300 px-2 py-2 text-center text-sm font-bold" />
                     <span class="text-sm font-bold">분</span>
-                    <button type="button" onclick="addCustomRoutineItem()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
-                        일과 추가
-                    </button>
+                    <button type="button" onclick="addCustomRoutineItem()" class="rounded-xl bg-emerald-600 text-white px-4 py-2 text-xs font-bold cursor-pointer">일과 추가</button>
                 </div>
             </section>
-
             <section id="routine-list-container" class="space-y-4"></section>
         </main>
 
-        <!-- ======================================================= -->
-        <!-- 모드 6: 나만의 하루 계획표(동그라미 시간표) 그리기        -->
-        <!-- ======================================================= -->
+        <!-- 모드 6 -->
         <main id="mode-panel-6" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
             <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 <div class="space-y-4">
-                    <h2 class="text-xl font-black text-slate-900">🗓 나만의 하루 계획표 그리기</h2>
-                    <p class="text-xs text-slate-500">시간대별 계획을 추가하면 오른쪽 동그라미 시간표와 일정 목록에 반영됩니다.</p>
-
+                    <h2 class="text-xl font-black text-slate-900">🗓 하루 계획표 그리기</h2>
                     <div class="no-print grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <input id="plan-time-input" type="text" placeholder="예: 09:00 ~ 10:00" class="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
-                        <input id="plan-activity-input" type="text" placeholder="예: 아침 독서 및 시계 놀이" class="sm:col-span-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
+                        <input id="plan-time-input" type="text" placeholder="09:00 ~ 10:00" class="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
+                        <input id="plan-activity-input" type="text" placeholder="시계 공부하기" class="sm:col-span-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
                     </div>
                     <div class="no-print flex gap-2">
-                        <button type="button" onclick="addPlanEntry()" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">계획 추가</button>
-                        <button type="button" onclick="resetPlanEntries()" class="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 text-xs font-bold cursor-pointer">초기화</button>
+                        <button type="button" onclick="addPlanEntry()" class="rounded-xl bg-indigo-600 text-white px-4 py-2 text-xs font-bold cursor-pointer">계획 추가</button>
+                        <button type="button" onclick="resetPlanEntries()" class="rounded-xl bg-slate-100 text-slate-700 px-4 py-2 text-xs font-bold cursor-pointer">초기화</button>
                     </div>
-
                     <ul id="plan-entries-list" class="space-y-2 pt-2"></ul>
                 </div>
 
                 <div class="flex flex-col items-center">
                     <canvas id="schedule-pie-canvas" width="280" height="280" class="rounded-full border-4 border-slate-800 shadow-md bg-white"></canvas>
-                    <p class="text-xs text-slate-500 mt-3 font-medium">원형 하루 시간표 미리보기</p>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- 3. 최종관리자(1인) · 관리인 권한 · 언어재활사 사진 승인 모달 -->
-    <!-- ========================================================= -->
+    <!-- 관리자·권한·언어재활사 자격증 모달 -->
     <div id="admin-modal" class="no-print fixed inset-0 z-50 hidden bg-slate-950/60 flex items-center justify-center p-4">
         <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 space-y-6">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
-                    <h3 class="text-xl font-black text-slate-900">⚙ 최종관리자 · 관리인 권한 · 언어재활사 자격 확인</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">최종관리자(1인)만 참여 코드, 관리인 권한, 자격증 사진 승인을 변경할 수 있습니다.</p>
+                    <h3 class="text-xl font-black text-slate-900">⚙ 최종관리자 · 관리인 권한 · 자격 확인</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">최종관리자(1인)만 참여 코드, 관리인 업무, 언어재활사 사진 승인을 변경할 수 있습니다.</p>
                 </div>
-                <button type="button" onclick="closeAdminModal()" class="rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-sm font-bold cursor-pointer">✕</button>
+                <button type="button" onclick="closeAdminModal()" class="rounded-xl bg-slate-100 px-3 py-1.5 text-sm font-bold cursor-pointer">✕</button>
             </div>
 
             <div class="rounded-2xl bg-indigo-50 border border-indigo-200 p-4 space-y-2">
-                <div class="text-xs font-extrabold text-indigo-900">🔐 비공개 참여 코드 &amp; 초대 안내</div>
+                <div class="text-xs font-extrabold text-indigo-900">🔐 비공개 참여 코드</div>
                 <div class="flex flex-wrap items-center gap-2">
                     <input id="admin-invite-code-input" type="text" value="TORY-CLOCK-2026" class="rounded-xl border border-indigo-300 bg-white px-3 py-1.5 text-sm font-bold text-indigo-900" />
                     <button type="button" onclick="saveInviteCode()" class="rounded-xl bg-indigo-600 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">코드 저장</button>
@@ -571,10 +480,10 @@
             </div>
 
             <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3">
-                <div class="text-xs font-extrabold text-slate-800">👥 관리인별 담당 업무 설정</div>
+                <div class="text-xs font-extrabold text-slate-800">👥 관리인 업무 설정</div>
                 <div id="managers-permission-list" class="space-y-2"></div>
                 <div class="flex flex-wrap gap-2 pt-1">
-                    <input id="new-manager-email" type="email" placeholder="관리인 이메일 입력" class="flex-1 min-w-[180px] rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs" />
+                    <input id="new-manager-email" type="email" placeholder="관리인 이메일" class="flex-1 min-w-[180px] rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs" />
                     <select id="new-manager-role" class="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold">
                         <option value="문제·일과 관리">문제·일과 관리</option>
                         <option value="수업 진행 전용">수업 진행 전용</option>
@@ -585,10 +494,8 @@
             </div>
 
             <div class="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 space-y-3">
-                <div class="text-xs font-extrabold text-emerald-900">🪪 언어재활사 자격 확인 (사진 첨부 → 최종관리자 승인/반려)</div>
-                <div class="flex flex-wrap items-center gap-3">
-                    <input id="credential-photo-input" type="file" accept="image/*" onchange="handleCredentialPhotoUpload(event)" class="text-xs" />
-                </div>
+                <div class="text-xs font-extrabold text-emerald-900">🪪 언어재활사 자격 확인 (사진 첨부 → 승인/반려)</div>
+                <input id="credential-photo-input" type="file" accept="image/*" onchange="handleCredentialPhotoUpload(event)" class="text-xs" />
                 <div id="credential-review-box" class="hidden rounded-xl bg-white border border-emerald-200 p-3 space-y-3">
                     <div class="flex items-center gap-4">
                         <img id="credential-preview-img" src="" alt="자격증 증빙 사진" class="w-24 h-24 object-cover rounded-xl border border-slate-200" />
@@ -598,8 +505,8 @@
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button type="button" onclick="setCredentialApproval('approved')" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 text-xs font-bold cursor-pointer">✔ 자격 승인</button>
-                        <button type="button" onclick="setCredentialApproval('rejected')" class="rounded-xl bg-rose-600 hover:bg-rose-700 text-white px-4 py-1.5 text-xs font-bold cursor-pointer">✕ 반려</button>
+                        <button type="button" onclick="setCredentialApproval('approved')" class="rounded-xl bg-emerald-600 text-white px-4 py-1.5 text-xs font-bold cursor-pointer">✔ 자격 승인</button>
+                        <button type="button" onclick="setCredentialApproval('rejected')" class="rounded-xl bg-rose-600 text-white px-4 py-1.5 text-xs font-bold cursor-pointer">✕ 반려</button>
                     </div>
                 </div>
             </div>
@@ -615,7 +522,7 @@
             drawTool: 'hour',
             drawnHands: { hourDeg: null, minuteDeg: null },
             chiefAdminEmail: null,
-            currentUserEmail: 'tory-admin@tory-clock.local',
+            currentUserEmail: '',
             inviteCode: 'TORY-CLOCK-2026',
             managers: [
                 { email: 'co-therapist@tory-clock.kr', role: '문제·일과 관리' }
@@ -665,57 +572,48 @@
             }, 3000);
         }
 
-        function quickEnterChiefWorkspace() {
-            const emailInput = document.getElementById('login-email-input');
-            const email = (emailInput && emailInput.value.trim()) ? emailInput.value.trim() : 'tory-admin@tory-clock.local';
-            enterWorkspaceWithUser(email, true);
-        }
-
         function handleLoginSubmit(event) {
             event.preventDefault();
             const emailInput = document.getElementById('login-email-input');
             const codeInput = document.getElementById('login-code-input');
             const deniedBox = document.getElementById('access-denied-box');
 
-            const email = (emailInput && emailInput.value.trim()) ? emailInput.value.trim() : 'tory-admin@tory-clock.local';
-            const code = (codeInput && codeInput.value.trim()) ? codeInput.value.trim() : '';
+            const email = (emailInput && emailInput.value ? emailInput.value.trim() : '');
+            const code = (codeInput && codeInput.value ? codeInput.value.trim() : '');
 
-            if (!state.chiefAdminEmail) {
-                if (deniedBox) deniedBox.classList.add('hidden');
-                enterWorkspaceWithUser(email, true);
+            if (!email) {
+                showToast('이메일 주소를 입력해 주세요.');
                 return;
             }
 
-            if (email === state.chiefAdminEmail || code === state.inviteCode) {
+            if (!state.chiefAdminEmail) {
+                state.chiefAdminEmail = email;
                 if (deniedBox) deniedBox.classList.add('hidden');
-                enterWorkspaceWithUser(email, false);
+                enterWorkspace(email);
+                return;
+            }
+
+            if (email.toLowerCase() === state.chiefAdminEmail.toLowerCase() || code === state.inviteCode) {
+                if (deniedBox) deniedBox.classList.add('hidden');
+                enterWorkspace(email);
             } else {
                 if (deniedBox) deniedBox.classList.remove('hidden');
                 showToast('참여 코드가 일치하지 않습니다.');
             }
         }
 
-        function enterWorkspaceWithUser(email, isFirstChief) {
-            if (!state.chiefAdminEmail && isFirstChief) {
-                state.chiefAdminEmail = email;
-            }
+        function enterWorkspace(email) {
             state.currentUserEmail = email;
-
-            const gate = document.getElementById('auth-gate-screen');
-            const shell = document.getElementById('app-main-shell');
-            if (gate) gate.classList.add('hidden');
-            if (shell) shell.classList.remove('hidden');
-
+            document.getElementById('auth-gate-screen').classList.add('hidden');
+            document.getElementById('app-main-shell').classList.remove('hidden');
             updateUserHeaderBadges();
             renderAllModes();
-            showToast(`토리쌤의 재밌게 공부하자 (시계편) · ${email} 접속 완료!`);
+            showToast(`토리쌤의 재밌게 공부하자 (시계편)에 접속했습니다.`);
         }
 
         function logoutToGate() {
-            const gate = document.getElementById('auth-gate-screen');
-            const shell = document.getElementById('app-main-shell');
-            if (shell) shell.classList.add('hidden');
-            if (gate) gate.classList.remove('hidden');
+            document.getElementById('app-main-shell').classList.add('hidden');
+            document.getElementById('auth-gate-screen').classList.remove('hidden');
         }
 
         function updateUserHeaderBadges() {
@@ -726,7 +624,9 @@
 
             if (emailDisp) emailDisp.textContent = state.currentUserEmail;
 
-            const isChief = state.currentUserEmail === state.chiefAdminEmail;
+            const isChief = state.currentUserEmail && state.chiefAdminEmail &&
+                state.currentUserEmail.toLowerCase() === state.chiefAdminEmail.toLowerCase();
+
             if (roleBadge) {
                 roleBadge.textContent = isChief ? '최종관리자 (1인)' : '참여 관리인';
             }
@@ -734,11 +634,7 @@
                 chiefStatus.textContent = `최종관리자: ${state.chiefAdminEmail}`;
             }
             if (slpBadge) {
-                if (state.credential.status === 'approved') {
-                    slpBadge.classList.remove('hidden');
-                } else {
-                    slpBadge.classList.add('hidden');
-                }
+                slpBadge.classList.toggle('hidden', state.credential.status !== 'approved');
             }
         }
 
@@ -905,7 +801,7 @@
 
         function speakText(text) {
             if (!('speechSynthesis' in window)) {
-                showToast(`AI 음성 안내: ${text}`);
+                showToast(text);
                 return;
             }
             window.speechSynthesis.cancel();
@@ -913,12 +809,11 @@
             utter.lang = 'ko-KR';
             utter.rate = 0.95;
             window.speechSynthesis.speak(utter);
-            showToast(`🔊 "${text}"`);
+            showToast(`🔊 ${text}`);
         }
 
         function speakCurrentMainTime() {
-            const phrase = formatKoreanTimePhrase(state.hour, state.minute);
-            speakText(`지금 시각은 ${phrase}입니다.`);
+            speakText(`지금 시각은 ${formatKoreanTimePhrase(state.hour, state.minute)}입니다.`);
         }
 
         function startSpeechGrading() {
@@ -946,16 +841,12 @@
                     normalizedSpoken.includes(digitsTarget.replace(/\s+/g, '')) ||
                     (state.minute === 0 && normalizedSpoken.includes(`${KOREAN_HOURS[state.hour % 12 || 12]}시`));
 
-                if (isCorrect) {
-                    if (feedbackEl) {
-                        feedbackEl.innerHTML = `<span class="text-emerald-700 font-black">🎉 정답이에요!</span> 인식된 말: "${spoken}"`;
-                    }
-                    speakText(`정답입니다! ${targetPhrase} 맞아요.`);
-                } else {
-                    if (feedbackEl) {
-                        feedbackEl.innerHTML = `<span class="text-rose-700 font-black">다시 한 번 말해 볼까요?</span> 인식된 말: "${spoken}" (정답: ${targetPhrase})`;
-                    }
+                if (feedbackEl) {
+                    feedbackEl.innerHTML = isCorrect
+                        ? `<span class="text-emerald-700 font-black">🎉 정답이에요!</span> 인식된 말: "${spoken}"`
+                        : `<span class="text-rose-700 font-black">다시 한 번 말해 볼까요?</span> 인식된 말: "${spoken}" (정답: ${targetPhrase})`;
                 }
+                if (isCorrect) speakText(`정답입니다! ${targetPhrase} 맞아요.`);
             };
 
             rec.onerror = () => {
@@ -987,8 +878,7 @@
             state.drawnHands = { hourDeg: null, minuteDeg: null };
             const canvas = document.getElementById('main-draw-canvas');
             if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1012,8 +902,6 @@
                     redrawUserHands(canvas);
                 });
             }
-            buildClockDialMarks('main-analog-clock', 270);
-            updateMainClockUI();
         });
 
         function redrawUserHands(canvas) {
@@ -1072,6 +960,34 @@
             showToast(`정답 시각: ${formatKoreanTimePhrase(state.hour, state.minute)}`);
         }
 
+        function createGuideCard(hour, minute, spokenText, digitalBadgeText) {
+            const card = document.createElement('div');
+            card.className = 'rounded-2xl bg-slate-50 border border-slate-200 p-4 flex flex-col items-center justify-between gap-3';
+
+            const clockId = `guide-clock-${hour}-${minute}-${Math.random().toString(36).slice(2, 6)}`;
+            const { hourAngle, minuteAngle } = getHandAngles(hour, minute);
+
+            card.innerHTML = `
+                <div class="w-full flex items-center justify-between gap-2">
+                    <span class="text-sm font-black text-slate-800">${spokenText}</span>
+                    <button type="button" onclick="speakText('${spokenText}')" class="rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-800 px-2.5 py-1 text-xs font-bold cursor-pointer">
+                        🔊 듣기
+                    </button>
+                </div>
+                <div id="${clockId}" class="clock-face clock-face-sm">
+                    <div class="clock-hand hour-hand" style="height: 38px; transform: translateX(-50%) rotate(${hourAngle}deg);"></div>
+                    <div class="clock-hand minute-hand" style="height: 54px; transform: translateX(-50%) rotate(${minuteAngle}deg);"></div>
+                    <div class="clock-center-cap"></div>
+                </div>
+                <div class="w-full text-center rounded-xl bg-slate-900 text-sky-300 py-1.5 text-base font-black tracking-wider">
+                    ${digitalBadgeText}
+                </div>
+            `;
+
+            setTimeout(() => buildClockDialMarks(clockId, 148), 0);
+            return card;
+        }
+
         function renderMode2Guides() {
             const hoursGrid = document.getElementById('guide-hours-grid');
             if (hoursGrid) {
@@ -1093,27 +1009,14 @@
             if (extraGrid) {
                 extraGrid.innerHTML = '';
                 const items = [
-                    { h: 1, m: 1, label: '한 시 일 분 (1분 눈금)', digital: '1:01' },
-                    { h: 2, m: 7, label: '두 시 칠 분 (5분+2칸)', digital: '2:07' },
+                    { h: 1, m: 1, label: '한 시 일 분', digital: '1:01' },
+                    { h: 2, m: 7, label: '두 시 칠 분', digital: '2:07' },
                     { h: 3, m: 30, label: '세 시 삼십 분 (60초=1분)', digital: '3:30:60' }
                 ];
                 items.forEach((it) => {
                     extraGrid.appendChild(createGuideCard(it.h, it.m, it.label, it.digital));
                 });
-                    </button>
-                </div>
-                <div id="${clockId}" class="clock-face clock-face-sm">
-                    <div class="clock-hand hour-hand" style="height: 38px; transform: translateX(-50%) rotate(${hourAngle}deg);"></div>
-                    <div class="clock-hand minute-hand" style="height: 54px; transform: translateX(-50%) rotate(${minuteAngle}deg);"></div>
-                    <div class="clock-center-cap"></div>
-                </div>
-                <div class="w-full text-center rounded-xl bg-slate-900 text-sky-300 py-1.5 text-base font-black tracking-wider">
-                    ${digitalBadgeText}
-                </div>
-            `;
-
-            setTimeout(() => buildClockDialMarks(clockId, 148), 0);
-            return card;
+            }
         }
 
         function setCalcDirection(dir) {
@@ -1122,11 +1025,11 @@
             const minusBtn = document.getElementById('calc-dir-minus');
             if (plusBtn && minusBtn) {
                 if (dir === 1) {
-                    plusBtn.className = 'px-3.5 py-1.5 text-xs font-extrabold bg-indigo-600 text-white cursor-pointer';
-                    minusBtn.className = 'px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer';
+                    plusBtn.className = 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-indigo-600 text-white cursor-pointer';
+                    minusBtn.className = 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer';
                 } else {
-                    minusBtn.className = 'px-3.5 py-1.5 text-xs font-extrabold bg-rose-600 text-white cursor-pointer';
-                    plusBtn.className = 'px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer';
+                    minusBtn.className = 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-rose-600 text-white cursor-pointer';
+                    plusBtn.className = 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer';
                 }
             }
         }
@@ -1139,7 +1042,6 @@
             state.calc.baseMinute = Math.min(59, Math.max(0, m));
             state.calc.delta = Math.max(1, d);
             renderCalcMode();
-            showToast('직접 만든 계산 문제가 적용되었습니다.');
         }
 
         function generateRandomCalcProblem() {
@@ -1174,7 +1076,7 @@
             if (mHand) mHand.style.transform = `translateX(-50%) rotate(${minuteAngle}deg)`;
 
             const fb = document.getElementById('calc-result-feedback');
-            if (fb) fb.textContent = '계산한 시와 분을 입력하고 [정답 확인]을 눌러 보세요.';
+            if (fb) fb.textContent = '시와 분을 입력하고 [정답 확인]을 눌러 보세요.';
         }
 
         function checkCalcAnswer() {
@@ -1187,7 +1089,7 @@
                 fb.innerHTML = `<span class="text-emerald-700">🎉 정답입니다! (${ansHour}시 ${ansMinute}분)</span>`;
                 speakText(`정답입니다! ${KOREAN_HOURS[ansHour]} 시 ${ansMinute} 분이에요.`);
             } else {
-                fb.innerHTML = `<span class="text-rose-700">정답은 ${ansHour}시 ${ansMinute}분이에요. 다시 한 번 확인해 보세요.</span>`;
+                fb.innerHTML = `<span class="text-rose-700">정답은 ${ansHour}시 ${ansMinute}분이에요.</span>`;
             }
         }
 
@@ -1230,7 +1132,7 @@
                         <div class="clock-hand minute-hand" style="height: 54px; transform: translateX(-50%) rotate(${minuteAngle}deg);"></div>
                         <div class="clock-center-cap"></div>
                     </div>
-                    <span class="text-sm font-bold text-slate-700">동그라미 시계 선택</span>
+                    <span class="text-sm font-bold text-slate-700">시계 선택</span>
                 `;
                 clocksCol.appendChild(btn);
                 setTimeout(() => buildClockDialMarks(cId, 148), 0);
@@ -1263,17 +1165,15 @@
             if (state.matching.matchedIds.has(labelId)) return;
             const selectedClock = state.matching.selectedClockId;
             if (!selectedClock) {
-                showToast('먼저 왼쪽 동그라미 시계를 선택해 주세요.');
+                showToast('먼저 왼쪽 시계를 선택해 주세요.');
                 return;
             }
 
             if (selectedClock === labelId) {
                 state.matching.matchedIds.add(labelId);
                 state.matching.selectedClockId = null;
-                const cBtn = document.getElementById(`match-clock-btn-${labelId}`);
-                const lBtn = document.getElementById(`match-label-btn-${labelId}`);
-                if (cBtn) cBtn.className = 'w-full rounded-2xl bg-emerald-50 border-2 border-emerald-500 p-3 flex items-center gap-4';
-                if (lBtn) lBtn.className = 'w-full rounded-2xl bg-emerald-50 border-2 border-emerald-500 p-5 text-left text-lg font-black text-emerald-800';
+                document.getElementById(`match-clock-btn-${labelId}`).className = 'w-full rounded-2xl bg-emerald-50 border-2 border-emerald-500 p-3 flex items-center gap-4';
+                document.getElementById(`match-label-btn-${labelId}`).className = 'w-full rounded-2xl bg-emerald-50 border-2 border-emerald-500 p-5 text-left text-lg font-black text-emerald-800';
                 speakText('짝을 잘 맞췄어요!');
             } else {
                 showToast('다시 한 번 짝을 찾아보세요.');
@@ -1308,7 +1208,6 @@
             state.routines.push({ title, hour, minute });
             titleInput.value = '';
             renderRoutineMode();
-            showToast('새로운 하루 일과가 추가되었습니다.');
         }
 
         function renderRoutineMode() {
@@ -1417,15 +1316,13 @@
         }
 
         function openAdminModal() {
-            const modal = document.getElementById('admin-modal');
-            if (modal) modal.classList.remove('hidden');
+            document.getElementById('admin-modal').classList.remove('hidden');
             renderManagersList();
             renderCredentialReviewBox();
         }
 
         function closeAdminModal() {
-            const modal = document.getElementById('admin-modal');
-            if (modal) modal.classList.add('hidden');
+            document.getElementById('admin-modal').classList.add('hidden');
         }
 
         function saveInviteCode() {
@@ -1436,30 +1333,13 @@
             const input = document.getElementById('admin-invite-code-input');
             if (input && input.value.trim()) {
                 state.inviteCode = input.value.trim();
-                showToast('비공개 참여 코드가 저장되었습니다.');
+                showToast('참여 코드가 저장되었습니다.');
             }
         }
 
         function renderManagersList() {
             const box = document.getElementById('managers-permission-list');
             if (!box) return;
-            box.innerHTML = '';
-            state.managers.forEach((m, idx) => {
-                const row = document.createElement('div');
-                row.className = 'flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs';
-                row.innerHTML = `
-                    <div><strong class="text-slate-800">${m.email}</strong> · <span class="text-indigo-700 font-bold">${m.role}</span></div>
-                    <button type="button" onclick="removeManagerRole(${idx})" class="text-rose-600 font-bold cursor-pointer">삭제</button>
-                `;
-                box.appendChild(row);
-            });
-        }
-
-        function addManagerRole() {
-            if (state.currentUserEmail !== state.chiefAdminEmail) {
-                showToast('최종관리자(1인)만 관리인 권한을 설정할 수 있습니다.');
-                return;
-            }
             const emailEl = document.getElementById('new-manager-email');
             const roleEl = document.getElementById('new-manager-role');
             const email = (emailEl.value || '').trim();
@@ -1467,7 +1347,6 @@
             state.managers.push({ email, role: roleEl.value });
             emailEl.value = '';
             renderManagersList();
-            showToast('관리인 권한이 추가되었습니다.');
         }
 
         function removeManagerRole(idx) {
@@ -1487,7 +1366,7 @@
                 state.credential.photoDataUrl = e.target.result;
                 state.credential.status = 'pending';
                 renderCredentialReviewBox();
-                showToast('언어재활사 증빙 사진이 첨부되었습니다. 최종관리자 승인을 기다려 주세요.');
+                showToast('증빙 사진이 첨부되었습니다.');
             };
             reader.readAsDataURL(file);
         }
@@ -1526,4 +1405,20 @@
         }
     </script>
 </body>
-</html>
+</html>            box.innerHTML = '';
+            state.managers.forEach((m, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs';
+                row.innerHTML = `
+                    <div><strong class="text-slate-800">${m.email}</strong> · <span class="text-indigo-700 font-bold">${m.role}</span></div>
+                    <button type="button" onclick="removeManagerRole(${idx})" class="text-rose-600 font-bold cursor-pointer">삭제</button>
+                `;
+                box.appendChild(row);
+            });
+        }
+
+        function addManagerRole() {
+            if (state.currentUserEmail !== state.chiefAdminEmail) {
+                showToast('최종관리자(1인)만 관리인 권한을 설정할 수 있습니다.');
+                return;
+            }
