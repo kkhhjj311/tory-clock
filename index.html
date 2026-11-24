@@ -1,0 +1,1529 @@
+}
+        }
+
+        function createGuideCard(hour, minute, spokenText, digitalBadgeText) {
+            const card = document.createElement('div');
+            card.className = 'rounded-2xl bg-slate-50 border border-slate-200 p-4 flex flex-col items-center justify-between gap-3';
+
+            const clockId = `guide-clock-${hour}-${minute}-${Math.random().toString(36).slice(2, 6)}`;
+            const { hourAngle, minuteAngle } = getHandAngles(hour, minute);
+
+            card.innerHTML = `
+                <div class="w-full flex items-center justify-between">
+                    <span class="text-sm font-black text-slate-800">${spokenText}</span>
+                    <button type="button" onclick="speakText('${spokenText}')" class="rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-800 px-2.5 py-1 text-xs font-bold cursor-pointer">
+                        🔊 듣기<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>토리쌤의 재밌게 공부하자 (시계편)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+        :root {
+            --bg-page: #f8fafc;
+            --text-main: #0f172a;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 아날로그 시계 원판 */
+        .clock-face {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            border-radius: 9999px;
+            background: radial-gradient(circle at center, #ffffff 68%, #f1f5f9 100%);
+            border: 8px solid #1e293b;
+            box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.18), inset 0 2px 8px rgba(15, 23, 42, 0.08);
+            margin: 0 auto;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .clock-face-lg {
+            width: 270px;
+            height: 270px;
+            border-width: 9px;
+        }
+
+        .clock-face-sm {
+            width: 148px;
+            height: 148px;
+            border-width: 5px;
+        }
+
+        .clock-center-cap {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin-left: -8px;
+            margin-top: -8px;
+            border-radius: 9999px;
+            background: #0f172a;
+            z-index: 30;
+            box-shadow: 0 0 0 3px #ffffff;
+        }
+
+        .clock-hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: 50% 100%;
+            border-radius: 9999px;
+            pointer-events: none;
+        }
+
+        .hour-hand {
+            width: 8px;
+            margin-left: -4px;
+            background: #ef4444;
+            z-index: 15;
+        }
+
+        .minute-hand {
+            width: 5px;
+            margin-left: -2.5px;
+            background: #2563eb;
+            z-index: 20;
+        }
+
+        /* 인쇄 시 제어 버튼 숨김 */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #ffffff !important;
+            }
+            .print-card {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+
+    <!-- 전역 알림 배너 -->
+    <div id="global-toast" class="fixed bottom-5 right-5 z-50 hidden max-w-md rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-semibold text-white shadow-xl transition-all">
+        <span id="global-toast-text">알림 메시지</span>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 1. 비공개 로그인 & 최종관리자(1인) 진입 화면                -->
+    <!-- ========================================================= -->
+    <section id="auth-gate-screen" class="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-indigo-50 via-white to-sky-50">
+        <div class="w-full max-w-xl rounded-3xl bg-white p-6 sm:p-8 shadow-xl border border-slate-200">
+            <div class="flex items-center justify-between gap-3 mb-5">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-800">
+                    🔒 토리쌤의 재밌게 공부하자 (시계편) · 비공개 워크스페이스
+                </span>
+                <span id="chief-status-badge" class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
+                    최초 로그인 시 최종관리자 등록
+                </span>
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-2">
+                토리쌤의 재밌게 공부하자 (시계편)
+            </h1>
+            <p class="text-sm text-slate-600 leading-relaxed mb-6">
+                최초로 로그인한 계정이 <strong>최종관리자(1인)</strong>로 등록되며, 참여 코드·초대 링크·관리인 권한 및 언어재활사 자격증 사진 승인을 직접 관리할 수 있습니다.
+            </p>
+
+            <!-- 빠른 접속 버튼 -->
+            <div class="mb-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold text-emerald-800">바로 시작하기</div>
+                        <div class="text-xs text-emerald-700 mt-0.5">버튼을 누르면 즉시 '토리쌤의 재밌게 공부하자 (시계편)' 활동지로 들어가 최종관리자 기능을 바로 쓸 수 있습니다.</div>
+                    </div>
+                    <button
+                        type="button"
+                        id="quick-enter-btn"
+                        onclick="quickEnterChiefWorkspace()"
+                        class="shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] px-5 py-3 text-sm font-extrabold text-white shadow-md transition cursor-pointer"
+                    >
+                        바로 활동지 들어가기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 이메일 및 참여 코드 로그인 폼 -->
+            <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                <div>
+                    <label for="login-email-input" class="block text-xs font-bold text-slate-700 mb-1">
+                        이메일 주소 (최종관리자 / 관리인 / 참여자)
+                    </label>
+                    <input
+                        id="login-email-input"
+                        type="email"
+                        placeholder="예: tory@clinic.kr"
+                        class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    />
+                </div>
+
+                <div>
+                    <label for="login-code-input" class="block text-xs font-bold text-slate-700 mb-1">
+                        참여 코드 (비공개 초대 코드 — 최종관리자 첫 접속 시 자동 통과)
+                    </label>
+                    <input
+                        id="login-code-input"
+                        type="text"
+                        placeholder="예: TORY-CLOCK-2026"
+                        class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 py-3 text-sm font-bold text-white shadow transition cursor-pointer"
+                >
+                    이메일로 로그인 및 접속하기
+                </button>
+            </form>
+
+            <!-- 접근 차단 안내 영역 -->
+            <div id="access-denied-box" class="hidden mt-4 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs text-rose-800 font-semibold">
+                접근 권한이 확인되지 않았습니다. 최종관리자에게 받은 참여 코드를 확인하거나 [바로 활동지 들어가기]를 눌러 주세요.
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- 2. 메인 활동지 앱 셸                                       -->
+    <!-- ========================================================= -->
+    <div id="app-main-shell" class="hidden min-h-screen flex flex-col">
+
+        <!-- 상단 헤더 & 모드 전환 바 -->
+        <header class="no-print sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🕒</span>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-black text-base sm:text-lg text-slate-900">토리쌤의 재밌게 공부하자 (시계편)</span>
+                            <span id="current-role-badge" class="rounded-full bg-indigo-100 text-indigo-800 px-2.5 py-0.5 text-xs font-bold">
+                                최종관리자
+                            </span>
+                            <span id="slp-verified-badge" class="hidden rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 text-xs font-bold">
+                                ✔ 언어재활사 인증됨
+                            </span>
+                        </div>
+                        <p id="current-user-email-display" class="text-xs text-slate-500">tory-admin@tory-clock.local</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button
+                        type="button"
+                        onclick="openAdminModal()"
+                        class="rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer"
+                    >
+                        ⚙ 관리자·자격 설정
+                    </button>
+                    <button
+                        type="button"
+                        onclick="window.print()"
+                        class="rounded-xl bg-sky-600 hover:bg-sky-700 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer"
+                    >
+                        🖨 활동지 인쇄
+                    </button>
+                    <button
+                        type="button"
+                        onclick="logoutToGate()"
+                        class="rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition cursor-pointer"
+                    >
+                        로그아웃
+                    </button>
+                </div>
+            </div>
+
+            <!-- 6가지 활동 모드 탭 -->
+            <nav class="max-w-7xl mx-auto px-4 sm:px-6 pb-3 flex gap-2 overflow-x-auto">
+                <button type="button" id="tab-btn-1" onclick="switchMode(1)" class="mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow cursor-pointer">
+                    1. 시계 읽기·그리기·말하기
+                </button>
+                <button type="button" id="tab-btn-2" onclick="switchMode(2)" class="mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">
+                    2. 시·분·초 읽는 법 (TTS)
+                </button>
+                <button type="button" id="tab-btn-3" onclick="switchMode(3)" class="mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">
+                    3. 몇 분 전/후 계산하기
+                </button>
+                <button type="button" id="tab-btn-4" onclick="switchMode(4)" class="mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">
+                    4. 시계 짝짓기
+                </button>
+                <button type="button" id="tab-btn-5" onclick="switchMode(5)" class="mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">
+                    5. 하루 일과 연결하기
+                </button>
+                <button type="button" id="tab-btn-6" onclick="switchMode(6)" class="mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">
+                    6. 하루 계획표 그리기
+                </button>
+            </nav>
+        </header>
+
+        <!-- 활동지 인쇄용 이름/날짜 헤더 -->
+        <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5">
+            <div class="print-card rounded-2xl bg-white border border-slate-200 px-5 py-3 flex flex-wrap items-center justify-between gap-4 text-sm">
+                <div class="font-bold text-slate-700">📅 날짜: <span class="inline-block w-36 border-b border-dashed border-slate-400"></span></div>
+                <div class="font-bold text-slate-700">🧒 이름: <span class="inline-block w-36 border-b border-dashed border-slate-400"></span></div>
+                <div class="font-bold text-slate-700">🎯 활동 목표: <span class="text-indigo-700">토리쌤의 재밌게 공부하자 (시계편)</span></div>
+            </div>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- 모드 1: 기본 시계 읽기 · 그리기 · 말하기 (STT / TTS)       -->
+        <!-- ======================================================= -->
+        <main id="mode-panel-1" class="mode-panel max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+            <section class="no-print print-card rounded-3xl bg-white p-5 sm:p-6 shadow-sm border border-slate-200">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="text-sm font-extrabold text-slate-800">⏰ 시각 설정 (00:00)</span>
+                        <div class="flex items-center gap-1.5 bg-slate-100 p-2 rounded-2xl">
+                            <input
+                                id="input-hour"
+                                type="number"
+                                min="0"
+                                max="23"
+                                value="3"
+                                onchange="syncTimeFromInputs()"
+                                class="w-16 rounded-xl bg-white border border-slate-300 px-2 py-1.5 text-center text-xl font-black text-rose-600"
+                            />
+                            <span class="text-2xl font-black text-slate-500">:</span>
+                            <input
+                                id="input-minute"
+                                type="number"
+                                min="0"
+                                max="59"
+                                value="15"
+                                onchange="syncTimeFromInputs()"
+                                class="w-16 rounded-xl bg-white border border-slate-300 px-2 py-1.5 text-center text-xl font-black text-blue-600"
+                            />
+                        </div>
+                        <button type="button" onclick="stepMinutes(-5)" class="rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-2 text-xs font-bold cursor-pointer">-5분</button>
+                        <button type="button" onclick="stepMinutes(5)" class="rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-2 text-xs font-bold cursor-pointer">+5분</button>
+                        <button type="button" onclick="randomizeMainClock()" class="rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 px-3.5 py-2 text-xs font-bold cursor-pointer">🎲 랜덤 문제</button>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" onclick="speakCurrentMainTime()" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
+                            🔊 AI 음성 듣기
+                        </button>
+                        <button type="button" id="mic-answer-btn" onclick="startSpeechGrading()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
+                            🎤 말로 답하기
+                        </button>
+                        <button type="button" id="toggle-digital-hide-btn" onclick="toggleDigitalHidden()" class="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-3.5 py-2 text-xs font-bold cursor-pointer">
+                            🙈 디지털 가리기
+                        </button>
+                        <button type="button" id="toggle-draw-mode-btn" onclick="toggleHandDrawMode()" class="rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-900 px-3.5 py-2 text-xs font-bold cursor-pointer">
+                            ✏ 바늘 그리기 모드
+                        </button>
+                    </div>
+                </div>
+
+                <div id="speech-feedback-bar" class="mt-4 rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm flex flex-wrap items-center justify-between gap-2">
+                    <div id="speech-feedback-text" class="font-semibold text-slate-700">
+                        시각을 입력하거나 <strong>🎤 말로 답하기</strong> 버튼을 눌러 시각을 말해 보세요.
+                    </div>
+                    <span id="korean-time-phrase" class="rounded-lg bg-indigo-50 text-indigo-800 px-3 py-1 text-xs font-extrabold">
+                        세 시 십오 분
+                    </span>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col items-center justify-between">
+                    <div class="w-full flex items-center justify-between mb-4">
+                        <span class="text-base font-black text-slate-800">💻 디지털 시계</span>
+                        <span class="text-xs font-bold text-slate-400"><span class="text-rose-500">■ 시(Hour)</span> · <span class="text-blue-600">■ 분(Minute)</span></span>
+                    </div>
+
+                    <div id="digital-clock-display" class="my-6 rounded-3xl bg-slate-900 px-8 py-6 text-5xl sm:text-6xl font-black tracking-wider shadow-inner">
+                        <span id="digital-hour-text" class="text-rose-400">03</span><span class="text-slate-400 mx-1">:</span><span id="digital-minute-text" class="text-sky-400">15</span>
+                    </div>
+
+                    <div id="digital-hidden-placeholder" class="hidden my-6 rounded-3xl bg-slate-100 border-2 border-dashed border-slate-300 px-8 py-7 text-center">
+                        <div class="text-sm font-bold text-slate-500 mb-2">디지털 시계가 가려져 있습니다</div>
+                        <button type="button" onclick="toggleDigitalHidden()" class="rounded-xl bg-indigo-600 text-white px-4 py-1.5 text-xs font-bold cursor-pointer">정답 보기</button>
+                    </div>
+
+                    <p class="text-xs text-slate-500 font-medium">빨간색 숫자는 <strong>시</strong>, 파란색 숫자는 <strong>분</strong>을 나타냅니다.</p>
+                </div>
+
+                <div class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col items-center">
+                    <div class="w-full flex items-center justify-between mb-4">
+                        <span class="text-base font-black text-slate-800">⭕ 동그라미 바늘 시계</span>
+                        <span class="text-xs font-bold text-slate-400"><span class="text-rose-500">━ 시침</span> · <span class="text-blue-600">━ 분침</span></span>
+                    </div>
+
+                    <div id="main-analog-clock" class="clock-face clock-face-lg">
+                        <div id="main-hour-hand" class="clock-hand hour-hand" style="height: 68px;"></div>
+                        <div id="main-minute-hand" class="clock-hand minute-hand" style="height: 98px;"></div>
+                        <div class="clock-center-cap"></div>
+                        <canvas id="main-draw-canvas" class="absolute inset-0 w-full h-full rounded-full z-25 hidden"></canvas>
+                    </div>
+
+                    <div id="draw-toolbar" class="no-print hidden mt-4 w-full rounded-2xl bg-purple-50 border border-purple-200 p-3 flex flex-wrap items-center justify-center gap-2">
+                        <button type="button" id="pen-tool-hour" onclick="setDrawTool('hour')" class="rounded-xl bg-rose-600 text-white px-3 py-1.5 text-xs font-bold cursor-pointer">시침 그리기(빨강)</button>
+                        <button type="button" id="pen-tool-minute" onclick="setDrawTool('minute')" class="rounded-xl bg-white text-blue-700 border border-blue-300 px-3 py-1.5 text-xs font-bold cursor-pointer">분침 그리기(파랑)</button>
+                        <button type="button" onclick="clearDrawnHands()" class="rounded-xl bg-white text-slate-700 border border-slate-300 px-3 py-1.5 text-xs font-bold cursor-pointer">지우기</button>
+                        <button type="button" onclick="checkDrawnHands()" class="rounded-xl bg-purple-700 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">정답 바늘 비교</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ======================================================= -->
+        <!-- 모드 2: 시·분·초 읽는 법 기초 가이드 (한 줄 3개 · TTS)      -->
+        <!-- ======================================================= -->
+        <main id="mode-panel-2" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-8">
+            <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                <div class="mb-5">
+                    <h2 class="text-xl font-black text-slate-900">① 시(時) 읽는 법 — 한 시부터 열두 시까지</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">스피커(🔊)를 누르면 AI 음성이 시 읽는 법을 읽어줍니다. (한 줄에 3개씩 큰 시계 표시)</p>
+                </div>
+                <div id="guide-hours-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
+            </section>
+
+            <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                <div class="mb-5">
+                    <h2 class="text-xl font-black text-slate-900">② 분(分) 읽는 법 — 5분 단위 (5분 ~ 55분)</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">큰 숫자 한 칸이 5분씩 늘어나요. 스피커(🔊)를 눌러 분 발음을 들어보세요.</p>
+                </div>
+                <div id="guide-minutes5-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
+            </section>
+
+            <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                <div class="mb-5">
+                    <h2 class="text-xl font-black text-slate-900">③ 1분 단위 및 초(秒) 읽는 법</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">작은 눈금 한 칸은 1분, 초침이 한 바퀴 돌면 60초(1분)가 됩니다.</p>
+                </div>
+                <div id="guide-minutes1-seconds-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
+            </section>
+        </main>
+
+        <!-- ======================================================= -->
+        <!-- 모드 3: 몇 분 전 · 몇 분 후 계산하기 (직접 문제내기 포함)     -->
+        <!-- ======================================================= -->
+        <main id="mode-panel-3" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+            <section class="no-print print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                <h2 class="text-lg font-black text-slate-900 mb-3">✏ 토리쌤 직접 문제내기 (+ / - 및 분 설정)</h2>
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="text-xs font-bold text-slate-600">기준 시각:</span>
+                    <input id="calc-base-hour" type="number" min="1" max="12" value="4" class="w-16 rounded-xl border border-slate-300 px-2 py-1.5 text-center font-bold" />
+                    <span>시</span>
+                    <input id="calc-base-minute" type="number" min="0" max="59" value="20" class="w-16 rounded-xl border border-slate-300 px-2 py-1.5 text-center font-bold" />
+                    <span>분</span>
+
+                    <div class="inline-flex rounded-xl overflow-hidden border border-slate-300">
+                        <button type="button" id="calc-dir-plus" onclick="setCalcDirection(1)" class="px-3.5 py-1.5 text-xs font-extrabold bg-indigo-600 text-white cursor-pointer">+ 후 (PLUS)</button>
+                        <button type="button" id="calc-dir-minus" onclick="setCalcDirection(-1)" class="px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer">- 전 (MINUS)</button>
+                    </div>
+
+                    <input id="calc-delta-minutes" type="number" min="1" max="120" value="15" class="w-20 rounded-xl border border-slate-300 px-2 py-1.5 text-center font-bold" />
+                    <span class="text-xs font-bold text-slate-700">분</span>
+
+                    <button type="button" onclick="applyCustomCalcProblem()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
+                        문제 적용하기
+                    </button>
+                    <button type="button" onclick="generateRandomCalcProblem()" class="rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 px-4 py-2 text-xs font-bold cursor-pointer">
+                        🎲 랜덤 문제
+                    </button>
+                </div>
+            </section>
+
+            <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                <div class="flex flex-col items-center">
+                    <div id="calc-question-prompt" class="text-xl font-black text-indigo-700 mb-4 text-center">
+                        4시 20분에서 15분 후는 몇 시 몇 분일까요?
+                    </div>
+                    <div id="calc-analog-clock" class="clock-face">
+                        <div id="calc-hour-hand" class="clock-hand hour-hand" style="height: 60px;"></div>
+                        <div id="calc-minute-hand" class="clock-hand minute-hand" style="height: 88px;"></div>
+                        <div class="clock-center-cap"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="text-sm font-bold text-slate-700">정답 입력하기</div>
+                    <div class="flex items-center gap-2">
+                        <input id="calc-ans-hour" type="number" min="1" max="12" placeholder="시" class="w-24 rounded-xl border border-slate-300 px-3 py-2 text-center text-lg font-bold" />
+                        <span class="font-bold">시</span>
+                        <input id="calc-ans-minute" type="number" min="0" max="59" placeholder="분" class="w-24 rounded-xl border border-slate-300 px-3 py-2 text-center text-lg font-bold" />
+                        <span class="font-bold">분</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="checkCalcAnswer()" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 text-sm font-bold cursor-pointer">정답 확인</button>
+                        <button type="button" onclick="speakCalcAnswer()" class="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 text-sm font-bold cursor-pointer">🔊 정답 음성 듣기</button>
+                    </div>
+                    <div id="calc-result-feedback" class="rounded-2xl bg-slate-50 border border-slate-200 p-3.5 text-sm font-bold text-slate-700">
+                        계산한 시와 분을 입력하고 [정답 확인]을 눌러 보세요.
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ======================================================= -->
+        <!-- 모드 4: 시계 짝짓기 활동                                -->
+        <!-- ======================================================= -->
+        <main id="mode-panel-4" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+            <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">🔗 동그라미 시계와 디지털 시각 짝짓기</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">왼쪽 시계를 누른 뒤 오른쪽에서 같은 시각 카드를 선택해 연결하세요.</p>
+                    </div>
+                    <button type="button" onclick="initMatchingGame()" class="no-print rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
+                        🔄 새 짝짓기 문제
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div id="matching-clocks-col" class="space-y-4"></div>
+                    <div id="matching-labels-col" class="space-y-4"></div>
+                </div>
+
+                <div id="matching-status-banner" class="mt-6 rounded-2xl bg-indigo-50 border border-indigo-200 p-4 text-sm font-bold text-indigo-900">
+                    짝을 맞춰 보세요! (0 / 4 완료)
+                </div>
+            </section>
+        </main>
+
+        <!-- ======================================================= -->
+        <!-- 모드 5: 하루 일과와 시계 연결하기 (한 줄 1개 · 직접 추가)   -->
+        <!-- ======================================================= -->
+        <main id="mode-panel-5" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+            <section class="no-print print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                <h2 class="text-lg font-black text-slate-900 mb-3">➕ 우리 아동 맞춤 하루 일과 추가하기</h2>
+                <div class="flex flex-wrap items-center gap-3">
+                    <input id="routine-title-input" type="text" placeholder="예: 토리쌤과 언어치료 수업" class="flex-1 min-w-[180px] rounded-xl border border-slate-300 px-3.5 py-2 text-sm font-semibold" />
+                    <input id="routine-hour-input" type="number" min="1" max="12" value="2" class="w-20 rounded-xl border border-slate-300 px-2 py-2 text-center text-sm font-bold" />
+                    <span class="text-sm font-bold">시</span>
+                    <input id="routine-minute-input" type="number" min="0" max="59" value="30" class="w-20 rounded-xl border border-slate-300 px-2 py-2 text-center text-sm font-bold" />
+                    <span class="text-sm font-bold">분</span>
+                    <button type="button" onclick="addCustomRoutineItem()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
+                        일과 추가
+                    </button>
+                </div>
+            </section>
+
+            <section id="routine-list-container" class="space-y-4"></section>
+        </main>
+
+        <!-- ======================================================= -->
+        <!-- 모드 6: 나만의 하루 계획표(동그라미 시간표) 그리기        -->
+        <!-- ======================================================= -->
+        <main id="mode-panel-6" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+            <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                <div class="space-y-4">
+                    <h2 class="text-xl font-black text-slate-900">🗓 나만의 하루 계획표 그리기</h2>
+                    <p class="text-xs text-slate-500">시간대별 계획을 추가하면 오른쪽 동그라미 시간표와 일정 목록에 반영됩니다.</p>
+
+                    <div class="no-print grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input id="plan-time-input" type="text" placeholder="예: 09:00 ~ 10:00" class="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
+                        <input id="plan-activity-input" type="text" placeholder="예: 아침 독서 및 시계 놀이" class="sm:col-span-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
+                    </div>
+                    <div class="no-print flex gap-2">
+                        <button type="button" onclick="addPlanEntry()" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">계획 추가</button>
+                        <button type="button" onclick="resetPlanEntries()" class="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 text-xs font-bold cursor-pointer">초기화</button>
+                    </div>
+
+                    <ul id="plan-entries-list" class="space-y-2 pt-2"></ul>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <canvas id="schedule-pie-canvas" width="280" height="280" class="rounded-full border-4 border-slate-800 shadow-md bg-white"></canvas>
+                    <p class="text-xs text-slate-500 mt-3 font-medium">원형 하루 시간표 미리보기</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 3. 최종관리자(1인) · 관리인 권한 · 언어재활사 사진 승인 모달 -->
+    <!-- ========================================================= -->
+    <div id="admin-modal" class="no-print fixed inset-0 z-50 hidden bg-slate-950/60 flex items-center justify-center p-4">
+        <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-xl font-black text-slate-900">⚙ 최종관리자 · 관리인 권한 · 언어재활사 자격 확인</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">최종관리자(1인)만 참여 코드, 관리인 권한, 자격증 사진 승인을 변경할 수 있습니다.</p>
+                </div>
+                <button type="button" onclick="closeAdminModal()" class="rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-sm font-bold cursor-pointer">✕</button>
+            </div>
+
+            <div class="rounded-2xl bg-indigo-50 border border-indigo-200 p-4 space-y-2">
+                <div class="text-xs font-extrabold text-indigo-900">🔐 비공개 참여 코드 &amp; 초대 안내</div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <input id="admin-invite-code-input" type="text" value="TORY-CLOCK-2026" class="rounded-xl border border-indigo-300 bg-white px-3 py-1.5 text-sm font-bold text-indigo-900" />
+                    <button type="button" onclick="saveInviteCode()" class="rounded-xl bg-indigo-600 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">코드 저장</button>
+                </div>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+                <div class="text-xs font-extrabold text-slate-800">👥 관리인별 담당 업무 설정</div>
+                <div id="managers-permission-list" class="space-y-2"></div>
+                <div class="flex flex-wrap gap-2 pt-1">
+                    <input id="new-manager-email" type="email" placeholder="관리인 이메일 입력" class="flex-1 min-w-[180px] rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs" />
+                    <select id="new-manager-role" class="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold">
+                        <option value="문제·일과 관리">문제·일과 관리</option>
+                        <option value="수업 진행 전용">수업 진행 전용</option>
+                        <option value="인쇄·자료 출력">인쇄·자료 출력</option>
+                    </select>
+                    <button type="button" onclick="addManagerRole()" class="rounded-xl bg-slate-800 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">추가</button>
+                </div>
+            </div>
+
+            <div class="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 space-y-3">
+                <div class="text-xs font-extrabold text-emerald-900">🪪 언어재활사 자격 확인 (사진 첨부 → 최종관리자 승인/반려)</div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <input id="credential-photo-input" type="file" accept="image/*" onchange="handleCredentialPhotoUpload(event)" class="text-xs" />
+                </div>
+                <div id="credential-review-box" class="hidden rounded-xl bg-white border border-emerald-200 p-3 space-y-3">
+                    <div class="flex items-center gap-4">
+                        <img id="credential-preview-img" src="" alt="자격증 증빙 사진" class="w-24 h-24 object-cover rounded-xl border border-slate-200" />
+                        <div class="space-y-1">
+                            <div id="credential-status-label" class="text-xs font-extrabold text-amber-700">승인 대기 중</div>
+                            <div class="text-xs text-slate-500">최종관리자가 사진을 확인한 뒤 승인 또는 반려를 눌러 주세요.</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="setCredentialApproval('approved')" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 text-xs font-bold cursor-pointer">✔ 자격 승인</button>
+                        <button type="button" onclick="setCredentialApproval('rejected')" class="rounded-xl bg-rose-600 hover:bg-rose-700 text-white px-4 py-1.5 text-xs font-bold cursor-pointer">✕ 반려</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            hour: 3,
+            minute: 15,
+            digitalHidden: false,
+            drawMode: false,
+            drawTool: 'hour',
+            drawnHands: { hourDeg: null, minuteDeg: null },
+            chiefAdminEmail: null,
+            currentUserEmail: 'tory-admin@tory-clock.local',
+            inviteCode: 'TORY-CLOCK-2026',
+            managers: [
+                { email: 'co-therapist@tory-clock.kr', role: '문제·일과 관리' }
+            ],
+            credential: {
+                photoDataUrl: '',
+                status: 'none'
+            },
+            calc: {
+                baseHour: 4,
+                baseMinute: 20,
+                direction: 1,
+                delta: 15
+            },
+            routines: [
+                { title: '기상 및 아침 인사하기', hour: 7, minute: 30 },
+                { title: '학교·치료실 가기', hour: 9, minute: 0 },
+                { title: '맛있는 점심 식사', hour: 12, minute: 30 },
+                { title: '저녁 식사 및 가족과 대화', hour: 6, minute: 30 }
+            ],
+            plans: [
+                { time: '09:00 ~ 10:00', activity: '아침 시계 읽기 연습', color: '#818cf8' },
+                { time: '10:00 ~ 11:30', activity: '언어재활 활동 및 말하기', color: '#34d399' },
+                { time: '12:00 ~ 13:00', activity: '점심 식사 및 휴식', color: '#fbbf24' }
+            ],
+            matching: {
+                pairs: [],
+                selectedClockId: null,
+                matchedIds: new Set()
+            }
+        };
+
+        const KOREAN_HOURS = {
+            0: '열두', 1: '한', 2: '두', 3: '세', 4: '네', 5: '다섯',
+            6: '여섯', 7: '일곱', 8: '여덟', 9: '아홉', 10: '열', 11: '열한', 12: '열두'
+        };
+
+        function showToast(message) {
+            const toast = document.getElementById('global-toast');
+            const text = document.getElementById('global-toast-text');
+            if (!toast || !text) return;
+            text.textContent = message;
+            toast.classList.remove('hidden');
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        function quickEnterChiefWorkspace() {
+            const emailInput = document.getElementById('login-email-input');
+            const email = (emailInput && emailInput.value.trim()) ? emailInput.value.trim() : 'tory-admin@tory-clock.local';
+            enterWorkspaceWithUser(email, true);
+        }
+
+        function handleLoginSubmit(event) {
+            event.preventDefault();
+            const emailInput = document.getElementById('login-email-input');
+            const codeInput = document.getElementById('login-code-input');
+            const deniedBox = document.getElementById('access-denied-box');
+
+            const email = (emailInput && emailInput.value.trim()) ? emailInput.value.trim() : 'tory-admin@tory-clock.local';
+            const code = (codeInput && codeInput.value.trim()) ? codeInput.value.trim() : '';
+
+            if (!state.chiefAdminEmail) {
+                if (deniedBox) deniedBox.classList.add('hidden');
+                enterWorkspaceWithUser(email, true);
+                return;
+            }
+
+            if (email === state.chiefAdminEmail || code === state.inviteCode) {
+                if (deniedBox) deniedBox.classList.add('hidden');
+                enterWorkspaceWithUser(email, false);
+            } else {
+                if (deniedBox) deniedBox.classList.remove('hidden');
+                showToast('참여 코드가 일치하지 않습니다.');
+            }
+        }
+
+        function enterWorkspaceWithUser(email, isFirstChief) {
+            if (!state.chiefAdminEmail && isFirstChief) {
+                state.chiefAdminEmail = email;
+            }
+            state.currentUserEmail = email;
+
+            const gate = document.getElementById('auth-gate-screen');
+            const shell = document.getElementById('app-main-shell');
+            if (gate) gate.classList.add('hidden');
+            if (shell) shell.classList.remove('hidden');
+
+            updateUserHeaderBadges();
+            renderAllModes();
+            showToast(`토리쌤의 재밌게 공부하자 (시계편) · ${email} 접속 완료!`);
+        }
+
+        function logoutToGate() {
+            const gate = document.getElementById('auth-gate-screen');
+            const shell = document.getElementById('app-main-shell');
+            if (shell) shell.classList.add('hidden');
+            if (gate) gate.classList.remove('hidden');
+        }
+
+        function updateUserHeaderBadges() {
+            const emailDisp = document.getElementById('current-user-email-display');
+            const roleBadge = document.getElementById('current-role-badge');
+            const slpBadge = document.getElementById('slp-verified-badge');
+            const chiefStatus = document.getElementById('chief-status-badge');
+
+            if (emailDisp) emailDisp.textContent = state.currentUserEmail;
+
+            const isChief = state.currentUserEmail === state.chiefAdminEmail;
+            if (roleBadge) {
+                roleBadge.textContent = isChief ? '최종관리자 (1인)' : '참여 관리인';
+            }
+            if (chiefStatus && state.chiefAdminEmail) {
+                chiefStatus.textContent = `최종관리자: ${state.chiefAdminEmail}`;
+            }
+            if (slpBadge) {
+                if (state.credential.status === 'approved') {
+                    slpBadge.classList.remove('hidden');
+                } else {
+                    slpBadge.classList.add('hidden');
+                }
+            }
+        }
+
+        function switchMode(modeNum) {
+            document.querySelectorAll('.mode-panel').forEach((el) => el.classList.add('hidden'));
+            const activePanel = document.getElementById(`mode-panel-${modeNum}`);
+            if (activePanel) activePanel.classList.remove('hidden');
+
+            document.querySelectorAll('.mode-tab').forEach((btn, idx) => {
+                if (idx + 1 === modeNum) {
+                    btn.className = 'mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow cursor-pointer';
+                } else {
+                    btn.className = 'mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer';
+                }
+            });
+
+            if (modeNum === 2) renderMode2Guides();
+            if (modeNum === 3) renderCalcMode();
+            if (modeNum === 4) initMatchingGame();
+            if (modeNum === 5) renderRoutineMode();
+            if (modeNum === 6) renderPlanMode();
+        }
+
+        function renderAllModes() {
+            buildClockDialMarks('main-analog-clock', 270);
+            updateMainClockUI();
+            renderMode2Guides();
+            renderCalcMode();
+            initMatchingGame();
+            renderRoutineMode();
+            renderPlanMode();
+        }
+
+        function buildClockDialMarks(containerId, sizePx) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.querySelectorAll('.dial-mark').forEach((n) => n.remove());
+
+            const radius = sizePx / 2;
+            const numberRadius = radius - 28;
+            const tickOuter = radius - 4;
+
+            for (let i = 0; i < 60; i++) {
+                const angleDeg = i * 6;
+                const rad = ((angleDeg - 90) * Math.PI) / 180;
+                const isHour = i % 5 === 0;
+                const tickLen = isHour ? 10 : 5;
+
+                const tick = document.createElement('div');
+                tick.className = 'dial-mark';
+                tick.style.position = 'absolute';
+                tick.style.left = `${radius + Math.cos(rad) * (tickOuter - tickLen / 2)}px`;
+                tick.style.top = `${radius + Math.sin(rad) * (tickOuter - tickLen / 2)}px`;
+                tick.style.width = isHour ? '3px' : '1.5px';
+                tick.style.height = `${tickLen}px`;
+                tick.style.backgroundColor = isHour ? '#334155' : '#94a3b8';
+                tick.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg)`;
+                container.appendChild(tick);
+
+                if (isHour) {
+                    const numVal = i === 0 ? 12 : i / 5;
+                    const label = document.createElement('div');
+                    label.className = 'dial-mark font-black text-slate-800';
+                    label.style.position = 'absolute';
+                    label.style.left = `${radius + Math.cos(rad) * numberRadius}px`;
+                    label.style.top = `${radius + Math.sin(rad) * numberRadius}px`;
+                    label.style.transform = 'translate(-50%, -50%)';
+                    label.style.fontSize = sizePx < 170 ? '12px' : '15px';
+                    label.textContent = String(numVal);
+                    container.appendChild(label);
+                }
+            }
+        }
+
+        function getHandAngles(hour, minute) {
+            const h12 = ((hour % 12) + 12) % 12;
+            const hourAngle = (h12 + minute / 60) * 30;
+            const minuteAngle = minute * 6;
+            return { hourAngle, minuteAngle };
+        }
+
+        function formatKoreanTimePhrase(hour, minute) {
+            const h12 = ((hour % 12) + 12) % 12;
+            const hText = `${KOREAN_HOURS[h12]} 시`;
+            if (minute === 0) return `${hText} 정각`;
+            return `${hText} ${minute} 분`;
+        }
+
+        function syncTimeFromInputs() {
+            const hEl = document.getElementById('input-hour');
+            const mEl = document.getElementById('input-minute');
+            let h = parseInt(hEl.value, 10);
+            let m = parseInt(mEl.value, 10);
+            if (Number.isNaN(h)) h = 0;
+            if (Number.isNaN(m)) m = 0;
+            state.hour = ((h % 24) + 24) % 24;
+            state.minute = ((m % 60) + 60) % 60;
+            updateMainClockUI();
+        }
+
+        function stepMinutes(delta) {
+            let total = state.hour * 60 + state.minute + delta;
+            total = ((total % 1440) + 1440) % 1440;
+            state.hour = Math.floor(total / 60);
+            state.minute = total % 60;
+            updateMainClockUI();
+        }
+
+        function randomizeMainClock() {
+            state.hour = Math.floor(Math.random() * 12) + 1;
+            state.minute = Math.floor(Math.random() * 12) * 5;
+            updateMainClockUI();
+            showToast(`새 문제: ${formatKoreanTimePhrase(state.hour, state.minute)}`);
+        }
+
+        function toggleDigitalHidden() {
+            state.digitalHidden = !state.digitalHidden;
+            updateMainClockUI();
+        }
+
+        function updateMainClockUI() {
+            const hInput = document.getElementById('input-hour');
+            const mInput = document.getElementById('input-minute');
+            if (hInput) hInput.value = state.hour;
+            if (mInput) mInput.value = state.minute;
+
+            const dHour = document.getElementById('digital-hour-text');
+            const dMin = document.getElementById('digital-minute-text');
+            const dBox = document.getElementById('digital-clock-display');
+            const dPlaceholder = document.getElementById('digital-hidden-placeholder');
+
+            if (dHour) dHour.textContent = String(state.hour).padStart(2, '0');
+            if (dMin) dMin.textContent = String(state.minute).padStart(2, '0');
+
+            if (state.digitalHidden) {
+                if (dBox) dBox.classList.add('hidden');
+                if (dPlaceholder) dPlaceholder.classList.remove('hidden');
+            } else {
+                if (dBox) dBox.classList.remove('hidden');
+                if (dPlaceholder) dPlaceholder.classList.add('hidden');
+            }
+
+            const { hourAngle, minuteAngle } = getHandAngles(state.hour, state.minute);
+            const hHand = document.getElementById('main-hour-hand');
+            const mHand = document.getElementById('main-minute-hand');
+
+            if (state.drawMode) {
+                if (hHand) hHand.style.display = 'none';
+                if (mHand) mHand.style.display = 'none';
+            } else {
+                if (hHand) {
+                    hHand.style.display = 'block';
+                    hHand.style.transform = `translateX(-50%) rotate(${hourAngle}deg)`;
+                }
+                if (mHand) {
+                    mHand.style.display = 'block';
+                    mHand.style.transform = `translateX(-50%) rotate(${minuteAngle}deg)`;
+                }
+            }
+
+            const phraseEl = document.getElementById('korean-time-phrase');
+            if (phraseEl) phraseEl.textContent = formatKoreanTimePhrase(state.hour, state.minute);
+        }
+
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) {
+                showToast(`AI 음성 안내: ${text}`);
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'ko-KR';
+            utter.rate = 0.95;
+            window.speechSynthesis.speak(utter);
+            showToast(`🔊 "${text}"`);
+        }
+
+        function speakCurrentMainTime() {
+            const phrase = formatKoreanTimePhrase(state.hour, state.minute);
+            speakText(`지금 시각은 ${phrase}입니다.`);
+        }
+
+        function startSpeechGrading() {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const feedbackEl = document.getElementById('speech-feedback-text');
+            if (!SpeechRec) {
+                if (feedbackEl) {
+                    feedbackEl.textContent = '이 브라우저는 음성 인식을 지원하지 않습니다. 직접 시각을 입력해 확인해 보세요.';
+                }
+                return;
+            }
+
+            const rec = new SpeechRec();
+            rec.lang = 'ko-KR';
+            rec.interimResults = false;
+            if (feedbackEl) feedbackEl.textContent = '🎤 듣고 있어요... 시각을 말해 보세요!';
+
+            rec.onresult = (event) => {
+                const spoken = event.results[0][0].transcript.trim();
+                const targetPhrase = formatKoreanTimePhrase(state.hour, state.minute);
+                const digitsTarget = `${state.hour % 12 || 12}시 ${state.minute}분`;
+                const normalizedSpoken = spoken.replace(/\s+/g, '');
+                const isCorrect =
+                    normalizedSpoken.includes(targetPhrase.replace(/\s+/g, '')) ||
+                    normalizedSpoken.includes(digitsTarget.replace(/\s+/g, '')) ||
+                    (state.minute === 0 && normalizedSpoken.includes(`${KOREAN_HOURS[state.hour % 12 || 12]}시`));
+
+                if (isCorrect) {
+                    if (feedbackEl) {
+                        feedbackEl.innerHTML = `<span class="text-emerald-700 font-black">🎉 정답이에요!</span> 인식된 말: "${spoken}"`;
+                    }
+                    speakText(`정답입니다! ${targetPhrase} 맞아요.`);
+                } else {
+                    if (feedbackEl) {
+                        feedbackEl.innerHTML = `<span class="text-rose-700 font-black">다시 한 번 말해 볼까요?</span> 인식된 말: "${spoken}" (정답: ${targetPhrase})`;
+                    }
+                }
+            };
+
+            rec.onerror = () => {
+                if (feedbackEl) feedbackEl.textContent = '음성을 인식하지 못했습니다. 마이크 권한을 확인하고 다시 눌러 주세요.';
+            };
+
+            rec.start();
+        }
+
+        function toggleHandDrawMode() {
+            state.drawMode = !state.drawMode;
+            const canvas = document.getElementById('main-draw-canvas');
+            const toolbar = document.getElementById('draw-toolbar');
+            if (canvas) {
+                canvas.classList.toggle('hidden', !state.drawMode);
+                canvas.width = 270;
+                canvas.height = 270;
+            }
+            if (toolbar) toolbar.classList.toggle('hidden', !state.drawMode);
+            updateMainClockUI();
+            clearDrawnHands();
+        }
+
+        function setDrawTool(tool) {
+            state.drawTool = tool;
+        }
+
+        function clearDrawnHands() {
+            state.drawnHands = { hourDeg: null, minuteDeg: null };
+            const canvas = document.getElementById('main-draw-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('main-draw-canvas');
+            if (canvas) {
+                canvas.addEventListener('pointerdown', (e) => {
+                    if (!state.drawMode) return;
+                    const rect = canvas.getBoundingClientRect();
+                    const cx = rect.width / 2;
+                    const cy = rect.height / 2;
+                    const x = e.clientX - rect.left - cx;
+                    const y = e.clientY - rect.top - cy;
+                    const angleDeg = ((Math.atan2(y, x) * 180) / Math.PI + 90 + 360) % 360;
+
+                    if (state.drawTool === 'hour') {
+                        state.drawnHands.hourDeg = angleDeg;
+                        state.drawTool = 'minute';
+                    } else {
+                        state.drawnHands.minuteDeg = angleDeg;
+                    }
+                    redrawUserHands(canvas);
+                });
+            }
+            buildClockDialMarks('main-analog-clock', 270);
+            updateMainClockUI();
+        });
+
+        function redrawUserHands(canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            if (state.drawnHands.hourDeg !== null) {
+                const rad = ((state.drawnHands.hourDeg - 90) * Math.PI) / 180;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(rad) * 68, cy + Math.sin(rad) * 68);
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 7;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+
+            if (state.drawnHands.minuteDeg !== null) {
+                const rad = ((state.drawnHands.minuteDeg - 90) * Math.PI) / 180;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(rad) * 98, cy + Math.sin(rad) * 98);
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 5;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+        }
+
+        function checkDrawnHands() {
+            const canvas = document.getElementById('main-draw-canvas');
+            if (!canvas) return;
+            redrawUserHands(canvas);
+
+            const { hourAngle, minuteAngle } = getHandAngles(state.hour, state.minute);
+            const ctx = canvas.getContext('2d');
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            [
+                { deg: hourAngle, len: 68, color: 'rgba(239,68,68,0.35)', w: 8 },
+                { deg: minuteAngle, len: 98, color: 'rgba(37,99,235,0.35)', w: 5 }
+            ].forEach((h) => {
+                const rad = ((h.deg - 90) * Math.PI) / 180;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + Math.cos(rad) * h.len, cy + Math.sin(rad) * h.len);
+                ctx.strokeStyle = h.color;
+                ctx.lineWidth = h.w;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            });
+
+            showToast(`정답 시각: ${formatKoreanTimePhrase(state.hour, state.minute)}`);
+        }
+
+        function renderMode2Guides() {
+            const hoursGrid = document.getElementById('guide-hours-grid');
+            if (hoursGrid) {
+                hoursGrid.innerHTML = '';
+                for (let h = 1; h <= 12; h++) {
+                    hoursGrid.appendChild(createGuideCard(h, 0, `${KOREAN_HOURS[h]} 시`, `${h}:00`));
+                }
+            }
+
+            const min5Grid = document.getElementById('guide-minutes5-grid');
+            if (min5Grid) {
+                min5Grid.innerHTML = '';
+                for (let m = 5; m <= 55; m += 5) {
+                    min5Grid.appendChild(createGuideCard(12, m, `${m} 분`, `12:${String(m).padStart(2, '0')}`));
+                }
+            }
+
+            const extraGrid = document.getElementById('guide-minutes1-seconds-grid');
+            if (extraGrid) {
+                extraGrid.innerHTML = '';
+                const items = [
+                    { h: 1, m: 1, label: '한 시 일 분 (1분 눈금)', digital: '1:01' },
+                    { h: 2, m: 7, label: '두 시 칠 분 (5분+2칸)', digital: '2:07' },
+                    { h: 3, m: 30, label: '세 시 삼십 분 (60초=1분)', digital: '3:30:60' }
+                ];
+                items.forEach((it) => {
+                    extraGrid.appendChild(createGuideCard(it.h, it.m, it.label, it.digital));
+                });
+                    </button>
+                </div>
+                <div id="${clockId}" class="clock-face clock-face-sm">
+                    <div class="clock-hand hour-hand" style="height: 38px; transform: translateX(-50%) rotate(${hourAngle}deg);"></div>
+                    <div class="clock-hand minute-hand" style="height: 54px; transform: translateX(-50%) rotate(${minuteAngle}deg);"></div>
+                    <div class="clock-center-cap"></div>
+                </div>
+                <div class="w-full text-center rounded-xl bg-slate-900 text-sky-300 py-1.5 text-base font-black tracking-wider">
+                    ${digitalBadgeText}
+                </div>
+            `;
+
+            setTimeout(() => buildClockDialMarks(clockId, 148), 0);
+            return card;
+        }
+
+        function setCalcDirection(dir) {
+            state.calc.direction = dir;
+            const plusBtn = document.getElementById('calc-dir-plus');
+            const minusBtn = document.getElementById('calc-dir-minus');
+            if (plusBtn && minusBtn) {
+                if (dir === 1) {
+                    plusBtn.className = 'px-3.5 py-1.5 text-xs font-extrabold bg-indigo-600 text-white cursor-pointer';
+                    minusBtn.className = 'px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer';
+                } else {
+                    minusBtn.className = 'px-3.5 py-1.5 text-xs font-extrabold bg-rose-600 text-white cursor-pointer';
+                    plusBtn.className = 'px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer';
+                }
+            }
+        }
+
+        function applyCustomCalcProblem() {
+            const h = parseInt(document.getElementById('calc-base-hour').value, 10) || 4;
+            const m = parseInt(document.getElementById('calc-base-minute').value, 10) || 0;
+            const d = parseInt(document.getElementById('calc-delta-minutes').value, 10) || 10;
+            state.calc.baseHour = Math.min(12, Math.max(1, h));
+            state.calc.baseMinute = Math.min(59, Math.max(0, m));
+            state.calc.delta = Math.max(1, d);
+            renderCalcMode();
+            showToast('직접 만든 계산 문제가 적용되었습니다.');
+        }
+
+        function generateRandomCalcProblem() {
+            state.calc.baseHour = Math.floor(Math.random() * 12) + 1;
+            state.calc.baseMinute = Math.floor(Math.random() * 12) * 5;
+            state.calc.direction = Math.random() < 0.5 ? 1 : -1;
+            state.calc.delta = (Math.floor(Math.random() * 6) + 1) * 5;
+            setCalcDirection(state.calc.direction);
+            renderCalcMode();
+        }
+
+        function getCalcAnswerTime() {
+            let total = (state.calc.baseHour % 12) * 60 + state.calc.baseMinute + state.calc.direction * state.calc.delta;
+            total = ((total % 720) + 720) % 720;
+            const ansHour = Math.floor(total / 60) || 12;
+            const ansMinute = total % 60;
+            return { ansHour, ansMinute };
+        }
+
+        function renderCalcMode() {
+            buildClockDialMarks('calc-analog-clock', 240);
+            const promptEl = document.getElementById('calc-question-prompt');
+            const dirLabel = state.calc.direction === 1 ? '후' : '전';
+            if (promptEl) {
+                promptEl.textContent = `${state.calc.baseHour}시 ${state.calc.baseMinute}분에서 ${state.calc.delta}분 ${dirLabel}는 몇 시 몇 분일까요?`;
+            }
+
+            const { hourAngle, minuteAngle } = getHandAngles(state.calc.baseHour, state.calc.baseMinute);
+            const hHand = document.getElementById('calc-hour-hand');
+            const mHand = document.getElementById('calc-minute-hand');
+            if (hHand) hHand.style.transform = `translateX(-50%) rotate(${hourAngle}deg)`;
+            if (mHand) mHand.style.transform = `translateX(-50%) rotate(${minuteAngle}deg)`;
+
+            const fb = document.getElementById('calc-result-feedback');
+            if (fb) fb.textContent = '계산한 시와 분을 입력하고 [정답 확인]을 눌러 보세요.';
+        }
+
+        function checkCalcAnswer() {
+            const userH = parseInt(document.getElementById('calc-ans-hour').value, 10);
+            const userM = parseInt(document.getElementById('calc-ans-minute').value, 10);
+            const { ansHour, ansMinute } = getCalcAnswerTime();
+            const fb = document.getElementById('calc-result-feedback');
+
+            if (userH === ansHour && userM === ansMinute) {
+                fb.innerHTML = `<span class="text-emerald-700">🎉 정답입니다! (${ansHour}시 ${ansMinute}분)</span>`;
+                speakText(`정답입니다! ${KOREAN_HOURS[ansHour]} 시 ${ansMinute} 분이에요.`);
+            } else {
+                fb.innerHTML = `<span class="text-rose-700">정답은 ${ansHour}시 ${ansMinute}분이에요. 다시 한 번 확인해 보세요.</span>`;
+            }
+        }
+
+        function speakCalcAnswer() {
+            const { ansHour, ansMinute } = getCalcAnswerTime();
+            speakText(`정답은 ${KOREAN_HOURS[ansHour]} 시 ${ansMinute} 분입니다.`);
+        }
+
+        function initMatchingGame() {
+            const pool = [
+                { id: 'p1', h: 1, m: 0, label: '01:00 (한 시 정각)' },
+                { id: 'p2', h: 3, m: 30, label: '03:30 (세 시 삼십 분)' },
+                { id: 'p3', h: 6, m: 15, label: '06:15 (여섯 시 십오 분)' },
+                { id: 'p4', h: 9, m: 45, label: '09:45 (아홉 시 사십오 분)' }
+            ];
+            state.matching.pairs = pool;
+            state.matching.selectedClockId = null;
+            state.matching.matchedIds = new Set();
+
+            const clocksCol = document.getElementById('matching-clocks-col');
+            const labelsCol = document.getElementById('matching-labels-col');
+            if (!clocksCol || !labelsCol) return;
+
+            clocksCol.innerHTML = '';
+            labelsCol.innerHTML = '';
+
+            const shuffledLabels = [...pool].sort(() => Math.random() - 0.5);
+
+            pool.forEach((item) => {
+                const cId = `match-clock-${item.id}`;
+                const { hourAngle, minuteAngle } = getHandAngles(item.h, item.m);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.id = `match-clock-btn-${item.id}`;
+                btn.onclick = () => selectMatchClock(item.id);
+                btn.className = 'w-full rounded-2xl bg-slate-50 hover:bg-indigo-50 border-2 border-slate-200 p-3 flex items-center gap-4 transition cursor-pointer';
+                btn.innerHTML = `
+                    <div id="${cId}" class="clock-face clock-face-sm shrink-0">
+                        <div class="clock-hand hour-hand" style="height: 38px; transform: translateX(-50%) rotate(${hourAngle}deg);"></div>
+                        <div class="clock-hand minute-hand" style="height: 54px; transform: translateX(-50%) rotate(${minuteAngle}deg);"></div>
+                        <div class="clock-center-cap"></div>
+                    </div>
+                    <span class="text-sm font-bold text-slate-700">동그라미 시계 선택</span>
+                `;
+                clocksCol.appendChild(btn);
+                setTimeout(() => buildClockDialMarks(cId, 148), 0);
+            });
+
+            shuffledLabels.forEach((item) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.id = `match-label-btn-${item.id}`;
+                btn.onclick = () => selectMatchLabel(item.id);
+                btn.className = 'w-full rounded-2xl bg-white hover:bg-sky-50 border-2 border-slate-200 p-5 text-left text-lg font-black text-slate-800 transition cursor-pointer';
+                btn.textContent = item.label;
+                labelsCol.appendChild(btn);
+            });
+
+            updateMatchingBanner();
+        }
+
+        function selectMatchClock(id) {
+            if (state.matching.matchedIds.has(id)) return;
+            state.matching.selectedClockId = id;
+            document.querySelectorAll('[id^="match-clock-btn-"]').forEach((el) => {
+                el.classList.remove('border-indigo-600', 'bg-indigo-50');
+            });
+            const target = document.getElementById(`match-clock-btn-${id}`);
+            if (target) target.classList.add('border-indigo-600', 'bg-indigo-50');
+        }
+
+        function selectMatchLabel(labelId) {
+            if (state.matching.matchedIds.has(labelId)) return;
+            const selectedClock = state.matching.selectedClockId;
+            if (!selectedClock) {
+                showToast('먼저 왼쪽 동그라미 시계를 선택해 주세요.');
+                return;
+            }
+
+            if (selectedClock === labelId) {
+                state.matching.matchedIds.add(labelId);
+                state.matching.selectedClockId = null;
+                const cBtn = document.getElementById(`match-clock-btn-${labelId}`);
+                const lBtn = document.getElementById(`match-label-btn-${labelId}`);
+                if (cBtn) cBtn.className = 'w-full rounded-2xl bg-emerald-50 border-2 border-emerald-500 p-3 flex items-center gap-4';
+                if (lBtn) lBtn.className = 'w-full rounded-2xl bg-emerald-50 border-2 border-emerald-500 p-5 text-left text-lg font-black text-emerald-800';
+                speakText('짝을 잘 맞췄어요!');
+            } else {
+                showToast('다시 한 번 짝을 찾아보세요.');
+            }
+            updateMatchingBanner();
+        }
+
+        function updateMatchingBanner() {
+            const banner = document.getElementById('matching-status-banner');
+            if (!banner) return;
+            const done = state.matching.matchedIds.size;
+            const total = state.matching.pairs.length;
+            banner.textContent = done === total
+                ? `🎉 모든 짝짓기를 완료했어요! (${done} / ${total})`
+                : `짝을 맞춰 보세요! (${done} / ${total} 완료)`;
+        }
+
+        function addCustomRoutineItem() {
+            const titleInput = document.getElementById('routine-title-input');
+            const hourInput = document.getElementById('routine-hour-input');
+            const minInput = document.getElementById('routine-minute-input');
+
+            const title = (titleInput.value || '').trim();
+            const hour = Math.min(12, Math.max(1, parseInt(hourInput.value, 10) || 1));
+            const minute = Math.min(59, Math.max(0, parseInt(minInput.value, 10) || 0));
+
+            if (!title) {
+                showToast('일과 이름을 입력해 주세요.');
+                return;
+            }
+
+            state.routines.push({ title, hour, minute });
+            titleInput.value = '';
+            renderRoutineMode();
+            showToast('새로운 하루 일과가 추가되었습니다.');
+        }
+
+        function renderRoutineMode() {
+            const container = document.getElementById('routine-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            state.routines.forEach((item, idx) => {
+                const cId = `routine-clock-${idx}`;
+                const { hourAngle, minuteAngle } = getHandAngles(item.hour, item.minute);
+
+                const row = document.createElement('div');
+                row.className = 'print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-6';
+                row.innerHTML = `
+                    <div class="space-y-1 text-center sm:text-left">
+                        <span class="inline-block rounded-full bg-amber-100 text-amber-900 px-3 py-0.5 text-xs font-extrabold">일과 ${idx + 1}</span>
+                        <h3 class="text-2xl font-black text-slate-900">${item.title}</h3>
+                        <p class="text-sm font-bold text-indigo-700">${item.hour}시 ${String(item.minute).padStart(2, '0')}분</p>
+                    </div>
+                    <div class="flex items-center gap-5">
+                        <div id="${cId}" class="clock-face clock-face-sm shrink-0">
+                            <div class="clock-hand hour-hand" style="height: 38px; transform: translateX(-50%) rotate(${hourAngle}deg);"></div>
+                            <div class="clock-hand minute-hand" style="height: 54px; transform: translateX(-50%) rotate(${minuteAngle}deg);"></div>
+                            <div class="clock-center-cap"></div>
+                        </div>
+                        <button type="button" onclick="speakText('${item.title} 시간은 ${KOREAN_HOURS[item.hour]} 시 ${item.minute} 분입니다.')" class="no-print rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold cursor-pointer">
+                            🔊 듣기
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+                setTimeout(() => buildClockDialMarks(cId, 148), 0);
+            });
+        }
+
+        function addPlanEntry() {
+            const timeEl = document.getElementById('plan-time-input');
+            const actEl = document.getElementById('plan-activity-input');
+            const timeVal = (timeEl.value || '').trim() || '14:00 ~ 15:00';
+            const actVal = (actEl.value || '').trim();
+            if (!actVal) {
+                showToast('계획 내용을 입력해 주세요.');
+                return;
+            }
+            const palette = ['#60a5fa', '#f472b6', '#4ade80', '#facc15', '#c084fc'];
+            const color = palette[state.plans.length % palette.length];
+            state.plans.push({ time: timeVal, activity: actVal, color });
+            timeEl.value = '';
+            actEl.value = '';
+            renderPlanMode();
+        }
+
+        function resetPlanEntries() {
+            state.plans = [];
+            renderPlanMode();
+        }
+
+        function renderPlanMode() {
+            const listEl = document.getElementById('plan-entries-list');
+            if (listEl) {
+                listEl.innerHTML = '';
+                state.plans.forEach((p) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center gap-3 rounded-xl bg-slate-50 border border-slate-200 px-3.5 py-2.5 text-sm';
+                    li.innerHTML = `
+                        <span class="w-4 h-4 rounded-full shrink-0" style="background:${p.color}"></span>
+                        <span class="font-bold text-slate-700">${p.time}</span>
+                        <span class="font-semibold text-slate-900">${p.activity}</span>
+                    `;
+                    listEl.appendChild(li);
+                });
+            }
+
+            const canvas = document.getElementById('schedule-pie-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const r = 128;
+
+            const count = Math.max(state.plans.length, 1);
+            const sliceAngle = (Math.PI * 2) / count;
+
+            if (state.plans.length === 0) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.fillStyle = '#f1f5f9';
+                ctx.fill();
+                return;
+            }
+
+            state.plans.forEach((p, idx) => {
+                const start = -Math.PI / 2 + idx * sliceAngle;
+                const end = start + sliceAngle;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, start, end);
+                ctx.closePath();
+                ctx.fillStyle = p.color;
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        function openAdminModal() {
+            const modal = document.getElementById('admin-modal');
+            if (modal) modal.classList.remove('hidden');
+            renderManagersList();
+            renderCredentialReviewBox();
+        }
+
+        function closeAdminModal() {
+            const modal = document.getElementById('admin-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function saveInviteCode() {
+            if (state.currentUserEmail !== state.chiefAdminEmail) {
+                showToast('최종관리자(1인)만 참여 코드를 변경할 수 있습니다.');
+                return;
+            }
+            const input = document.getElementById('admin-invite-code-input');
+            if (input && input.value.trim()) {
+                state.inviteCode = input.value.trim();
+                showToast('비공개 참여 코드가 저장되었습니다.');
+            }
+        }
+
+        function renderManagersList() {
+            const box = document.getElementById('managers-permission-list');
+            if (!box) return;
+            box.innerHTML = '';
+            state.managers.forEach((m, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs';
+                row.innerHTML = `
+                    <div><strong class="text-slate-800">${m.email}</strong> · <span class="text-indigo-700 font-bold">${m.role}</span></div>
+                    <button type="button" onclick="removeManagerRole(${idx})" class="text-rose-600 font-bold cursor-pointer">삭제</button>
+                `;
+                box.appendChild(row);
+            });
+        }
+
+        function addManagerRole() {
+            if (state.currentUserEmail !== state.chiefAdminEmail) {
+                showToast('최종관리자(1인)만 관리인 권한을 설정할 수 있습니다.');
+                return;
+            }
+            const emailEl = document.getElementById('new-manager-email');
+            const roleEl = document.getElementById('new-manager-role');
+            const email = (emailEl.value || '').trim();
+            if (!email) return;
+            state.managers.push({ email, role: roleEl.value });
+            emailEl.value = '';
+            renderManagersList();
+            showToast('관리인 권한이 추가되었습니다.');
+        }
+
+        function removeManagerRole(idx) {
+            if (state.currentUserEmail !== state.chiefAdminEmail) {
+                showToast('최종관리자(1인)만 관리인 권한을 삭제할 수 있습니다.');
+                return;
+            }
+            state.managers.splice(idx, 1);
+            renderManagersList();
+        }
+
+        function handleCredentialPhotoUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                state.credential.photoDataUrl = e.target.result;
+                state.credential.status = 'pending';
+                renderCredentialReviewBox();
+                showToast('언어재활사 증빙 사진이 첨부되었습니다. 최종관리자 승인을 기다려 주세요.');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderCredentialReviewBox() {
+            const box = document.getElementById('credential-review-box');
+            const img = document.getElementById('credential-preview-img');
+            const label = document.getElementById('credential-status-label');
+            if (!box || !state.credential.photoDataUrl) return;
+
+            box.classList.remove('hidden');
+            if (img) img.src = state.credential.photoDataUrl;
+            if (label) {
+                if (state.credential.status === 'approved') {
+                    label.className = 'text-xs font-extrabold text-emerald-700';
+                    label.textContent = '✔ 최종관리자 승인 완료 (언어재활사 인증됨)';
+                } else if (state.credential.status === 'rejected') {
+                    label.className = 'text-xs font-extrabold text-rose-700';
+                    label.textContent = '✕ 반려됨';
+                } else {
+                    label.className = 'text-xs font-extrabold text-amber-700';
+                    label.textContent = '⏳ 최종관리자 확인 대기 중';
+                }
+            }
+        }
+
+        function setCredentialApproval(decision) {
+            if (state.currentUserEmail !== state.chiefAdminEmail) {
+                showToast('최종관리자(1인)만 자격증을 승인/반려할 수 있습니다.');
+                return;
+            }
+            state.credential.status = decision;
+            renderCredentialReviewBox();
+            updateUserHeaderBadges();
+            showToast(decision === 'approved' ? '언어재활사 자격이 승인되었습니다.' : '자격 확인이 반려되었습니다.');
+        }
+    </script>
+</body>
+</html>
