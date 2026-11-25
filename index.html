@@ -23,64 +23,33 @@
 
         .clock-face {
             position: relative;
+            box-sizing: border-box;
             width: 240px;
             height: 240px;
-            border-radius: 9999px;
-            background: radial-gradient(circle at center, #ffffff 68%, #f1f5f9 100%);
-            border: 8px solid #1e293b;
-            box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.16), inset 0 2px 8px rgba(15, 23, 42, 0.08);
             margin: 0 auto;
             user-select: none;
             touch-action: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .clock-face-lg {
             width: 270px;
             height: 270px;
-            border-width: 9px;
         }
 
         .clock-face-sm {
-            width: 148px;
-            height: 148px;
-            border-width: 5px;
+            width: 152px;
+            height: 152px;
         }
 
-        .clock-center-cap {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 16px;
-            height: 16px;
-            margin-left: -8px;
-            margin-top: -8px;
-            border-radius: 9999px;
-            background: #0f172a;
-            z-index: 30;
-            box-shadow: 0 0 0 3px #ffffff;
-        }
-
-        .clock-hand {
-            position: absolute;
-            bottom: 50%;
-            left: 50%;
-            transform-origin: 50% 100%;
-            border-radius: 9999px;
-            pointer-events: none;
-        }
-
-        .hour-hand {
-            width: 8px;
-            margin-left: -4px;
-            background: #ef4444;
-            z-index: 15;
-        }
-
-        .minute-hand {
-            width: 5px;
-            margin-left: -2.5px;
-            background: #2563eb;
-            z-index: 20;
+        .precision-clock-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            overflow: visible;
+            filter: drop-shadow(0 10px 20px rgba(15, 23, 42, 0.12));
         }
 
         @media print {
@@ -335,10 +304,8 @@
                     </div>
 
                     <div id="main-analog-clock" class="clock-face clock-face-lg">
-                        <div id="main-hour-hand" class="clock-hand hour-hand" style="height: 68px;"></div>
-                        <div id="main-minute-hand" class="clock-hand minute-hand" style="height: 98px;"></div>
-                        <div class="clock-center-cap"></div>
-                        <canvas id="main-draw-canvas" class="absolute inset-0 w-full h-full rounded-full z-25 hidden"></canvas>
+                        <div id="main-svg-clock-slot" class="w-full h-full"></div>
+                        <canvas id="main-draw-canvas" width="240" height="240" class="absolute inset-0 w-full h-full rounded-full z-20 hidden"></canvas>
                     </div>
 
                     <div id="draw-toolbar" class="no-print hidden mt-4 w-full rounded-2xl bg-purple-50 border border-purple-200 p-3 flex flex-wrap items-center justify-center gap-2">
@@ -449,9 +416,7 @@
                 <div class="flex flex-col items-center">
                     <div id="calc-question-prompt" class="text-xl font-black text-indigo-700 mb-4 text-center"></div>
                     <div id="calc-analog-clock" class="clock-face">
-                        <div id="calc-hour-hand" class="clock-hand hour-hand" style="height: 60px;"></div>
-                        <div id="calc-minute-hand" class="clock-hand minute-hand" style="height: 88px;"></div>
-                        <div class="clock-center-cap"></div>
+                        <div id="calc-svg-clock-slot" class="w-full h-full"></div>
                     </div>
                 </div>
 
@@ -628,6 +593,12 @@
             6: '여섯', 7: '일곱', 8: '여덟', 9: '아홉', 10: '열', 11: '열한', 12: '열두'
         };
 
+        function getActiveTtsRate() {
+            const parsed = Number(state.ttsRate);
+            if (!Number.isFinite(parsed) || parsed <= 0) return 0.72;
+            return Math.min(1.0, Math.max(0.45, parsed));
+        }
+
         function showToast(message) {
             const toast = document.getElementById('global-toast');
             const text = document.getElementById('global-toast-text');
@@ -675,6 +646,7 @@
             document.getElementById('auth-gate-screen').classList.add('hidden');
             document.getElementById('app-main-shell').classList.remove('hidden');
             updateUserHeaderBadges();
+            updateTtsSpeedButton();
             renderAllModes();
             showToast('토리쌤의 재밌게 공부하자 (시계편)에 접속했습니다.');
         }
@@ -719,6 +691,8 @@
                 }
             });
 
+            updateTtsSpeedButton();
+
             if (modeNum === 2) renderMode2Guides();
             if (modeNum === 3) renderCalcMode();
             if (modeNum === 4) initMatchingGame();
@@ -727,7 +701,6 @@
         }
 
         function renderAllModes() {
-            buildClockDialMarks('main-analog-clock', 270);
             updateMainClockUI();
             renderMode2Guides();
             renderCalcMode();
@@ -736,52 +709,114 @@
             renderPlanMode();
         }
 
-        function buildClockDialMarks(containerId, sizePx) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.querySelectorAll('.dial-mark').forEach((n) => n.remove());
+        /**
+         * 통합 정밀 SVG 시계 생성기 (viewBox="0 0 240 240", 중심 (120, 120))
+         * - 외곽 테두리 원: r=112, stroke-width=8 (내부 반지름 108)
+         * - 60개 분/초 눈금: r=96 ~ 105 (테두리 안쪽에 엄격히 배치)
+         * - 1~12 숫자: r=78 (눈금 안쪽에 겹침 없이 정중앙 정렬)
+         * - 시침·분침·초침: 정확한 각도와 삼각함수 좌표(120 + len*sin, 120 - len*cos)로 계산
+         */
+        function createPrecisionClockSVG({
+            hour = 12,
+            minute = 0,
+            second = null,
+            showHourHand = true,
+            showMinuteHand = true,
+            showSecondHand = false,
+            hideHands = false,
+            compact = false
+        } = {}) {
+            const cx = 120;
+            const cy = 120;
+            const uid = `clk-${Math.random().toString(36).slice(2, 8)}`;
 
-            const radius = sizePx / 2;
-            const numberRadius = radius - 28;
-            const tickOuter = radius - 4;
+            let ticksMarkup = '';
+            let numbersMarkup = '';
 
             for (let i = 0; i < 60; i++) {
-                const angleDeg = i * 6;
-                const rad = ((angleDeg - 90) * Math.PI) / 180;
-                const isHour = i % 5 === 0;
-                const tickLen = isHour ? 10 : 5;
+                const deg = i * 6;
+                const rad = (deg * Math.PI) / 180;
+                const isMajor = i % 5 === 0;
+                const outerR = 105;
+                const innerR = isMajor ? 94 : 99;
 
-                const tick = document.createElement('div');
-                tick.className = 'dial-mark';
-                tick.style.position = 'absolute';
-                tick.style.left = `${radius + Math.cos(rad) * (tickOuter - tickLen / 2)}px`;
-                tick.style.top = `${radius + Math.sin(rad) * (tickOuter - tickLen / 2)}px`;
-                tick.style.width = isHour ? '3px' : '1.5px';
-                tick.style.height = `${tickLen}px`;
-                tick.style.backgroundColor = isHour ? '#334155' : '#94a3b8';
-                tick.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg)`;
-                container.appendChild(tick);
+                const x1 = (cx + innerR * Math.sin(rad)).toFixed(2);
+                const y1 = (cy - innerR * Math.cos(rad)).toFixed(2);
+                const x2 = (cx + outerR * Math.sin(rad)).toFixed(2);
+                const y2 = (cy - outerR * Math.cos(rad)).toFixed(2);
 
-                if (isHour) {
-                    const numVal = i === 0 ? 12 : i / 5;
-                    const label = document.createElement('div');
-                    label.className = 'dial-mark font-black text-slate-800';
-                    label.style.position = 'absolute';
-                    label.style.left = `${radius + Math.cos(rad) * numberRadius}px`;
-                    label.style.top = `${radius + Math.sin(rad) * numberRadius}px`;
-                    label.style.transform = 'translate(-50%, -50%)';
-                    label.style.fontSize = sizePx < 170 ? '12px' : '15px';
-                    label.textContent = String(numVal);
-                    container.appendChild(label);
+                ticksMarkup += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isMajor ? '#1e293b' : '#94a3b8'}" stroke-width="${isMajor ? (compact ? '3' : '2.6') : (compact ? '1.6' : '1.3')}" stroke-linecap="round" />`;
+
+                if (isMajor) {
+                    const num = i === 0 ? 12 : i / 5;
+                    const numR = 77;
+                    const nx = (cx + numR * Math.sin(rad)).toFixed(2);
+                    const ny = (cy - numR * Math.cos(rad)).toFixed(2);
+                    const fontSize = compact ? 18 : 16;
+                    numbersMarkup += `<text x="${nx}" y="${ny}" fill="#0f172a" font-size="${fontSize}" font-weight="900" font-family="'Noto Sans KR', sans-serif" text-anchor="middle" dominant-baseline="central">${num}</text>`;
                 }
             }
+
+            const { hourAngle, minuteAngle, secondAngle } = getHandAngles(hour, minute, second || 0);
+            let handsMarkup = '';
+
+            if (!hideHands) {
+                if (showHourHand) {
+                    const hLen = 54;
+                    const hRad = (hourAngle * Math.PI) / 180;
+                    const hx = (cx + hLen * Math.sin(hRad)).toFixed(2);
+                    const hy = (cy - hLen * Math.cos(hRad)).toFixed(2);
+                    handsMarkup += `<line x1="${cx}" y1="${cy}" x2="${hx}" y2="${hy}" stroke="#ef4444" stroke-width="${compact ? '8' : '7.5'}" stroke-linecap="round" />`;
+                }
+
+                if (showMinuteHand) {
+                    const mLen = 82;
+                    const mRad = (minuteAngle * Math.PI) / 180;
+                    const mx = (cx + mLen * Math.sin(mRad)).toFixed(2);
+                    const my = (cy - mLen * Math.cos(mRad)).toFixed(2);
+                    handsMarkup += `<line x1="${cx}" y1="${cy}" x2="${mx}" y2="${my}" stroke="#2563eb" stroke-width="${compact ? '5.5' : '5'}" stroke-linecap="round" />`;
+                }
+
+                if (showSecondHand && second !== null) {
+                    const sLen = 91;
+                    const sTail = 16;
+                    const sRad = (secondAngle * Math.PI) / 180;
+                    const sx1 = (cx - sTail * Math.sin(sRad)).toFixed(2);
+                    const sy1 = (cy + sTail * Math.cos(sRad)).toFixed(2);
+                    const sx2 = (cx + sLen * Math.sin(sRad)).toFixed(2);
+                    const sy2 = (cy - sLen * Math.cos(sRad)).toFixed(2);
+                    handsMarkup += `<line x1="${sx1}" y1="${sy1}" x2="${sx2}" y2="${sy2}" stroke="#10b981" stroke-width="${compact ? '4' : '3.5'}" stroke-linecap="round" />`;
+                }
+            }
+
+            const capFill = showSecondHand && !showHourHand && !showMinuteHand ? '#065f46' : '#0f172a';
+
+            return `
+                <svg viewBox="0 0 240 240" class="precision-clock-svg" role="img" aria-label="아날로그 시계">
+                    <defs>
+                        <radialGradient id="dial-grad-${uid}" cx="50%" cy="50%" r="50%">
+                            <stop offset="68%" stop-color="#ffffff" />
+                            <stop offset="100%" stop-color="#f1f5f9" />
+                        </radialGradient>
+                    </defs>
+                    <circle cx="120" cy="120" r="112" fill="url(#dial-grad-${uid})" stroke="#1e293b" stroke-width="8" />
+                    <circle cx="120" cy="120" r="107.5" fill="none" stroke="#e2e8f0" stroke-width="1" />
+                    ${ticksMarkup}
+                    ${numbersMarkup}
+                    ${handsMarkup}
+                    <circle cx="120" cy="120" r="7.5" fill="${capFill}" stroke="#ffffff" stroke-width="2.5" />
+                </svg>
+            `;
         }
 
-        function getHandAngles(hour, minute) {
+        function getHandAngles(hour, minute, second = 0) {
             const h12 = ((hour % 12) + 12) % 12;
-            const hourAngle = (h12 + minute / 60) * 30;
-            const minuteAngle = minute * 6;
-            return { hourAngle, minuteAngle };
+            const safeMin = ((minute % 60) + 60) % 60;
+            const safeSec = ((second % 60) + 60) % 60;
+            const hourAngle = (h12 + safeMin / 60 + safeSec / 3600) * 30;
+            const minuteAngle = (safeMin + safeSec / 60) * 6;
+            const secondAngle = safeSec * 6;
+            return { hourAngle, minuteAngle, secondAngle };
         }
 
         function formatKoreanTimePhrase(hour, minute) {
@@ -845,35 +880,21 @@
                 if (dPlaceholder) dPlaceholder.classList.add('hidden');
             }
 
-            const { hourAngle, minuteAngle } = getHandAngles(state.hour, state.minute);
-            const hHand = document.getElementById('main-hour-hand');
-            const mHand = document.getElementById('main-minute-hand');
-
-            if (state.drawMode) {
-                if (hHand) hHand.style.display = 'none';
-                if (mHand) mHand.style.display = 'none';
-            } else {
-                if (hHand) {
-                    hHand.style.display = 'block';
-                    hHand.style.transform = `translateX(-50%) rotate(${hourAngle}deg)`;
-                }
-                if (mHand) {
-                    mHand.style.display = 'block';
-                    mHand.style.transform = `translateX(-50%) rotate(${minuteAngle}deg)`;
-                }
+            const mainSlot = document.getElementById('main-svg-clock-slot');
+            if (mainSlot) {
+                mainSlot.innerHTML = createPrecisionClockSVG({
+                    hour: state.hour,
+                    minute: state.minute,
+                    hideHands: state.drawMode
+                });
             }
 
             const phraseEl = document.getElementById('korean-time-phrase');
             if (phraseEl) phraseEl.textContent = formatKoreanTimePhrase(state.hour, state.minute);
         }
 
-        function speakText(text) {
-            if (!('speechSynthesis' in window)) {
-                showToast(text);
-                return;
-            }
-            window.speechSynthesis.cancel();
-
+        function buildUtteranceForCurrentSpeed(text) {
+            const activeRate = getActiveTtsRate();
             const articulatedText = String(text)
                 .replace(/\s+/g, ' ')
                 .replace(/([시분초])\s*/g, '$1, ')
@@ -882,7 +903,7 @@
 
             const utter = new SpeechSynthesisUtterance(articulatedText);
             utter.lang = 'ko-KR';
-            utter.rate = state.ttsRate || 0.72;
+            utter.rate = activeRate;
             utter.pitch = 1.05;
 
             const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
@@ -890,26 +911,42 @@
             if (koreanVoice) {
                 utter.voice = koreanVoice;
             }
+            return utter;
+        }
+
+        function speakText(text) {
+            const activeRate = getActiveTtsRate();
+            if (!('speechSynthesis' in window)) {
+                showToast(`${text} (속도 ${activeRate}x)`);
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+            const utter = buildUtteranceForCurrentSpeed(text);
+            utter.onstart = () => {
+                utter.rate = getActiveTtsRate();
+            };
 
             window.speechSynthesis.speak(utter);
-            showToast(`🔊 ${text}`);
+            const speedLabel = activeRate <= 0.62 ? '더 천천히' : '천천히';
+            showToast(`🔊 ${text} (${speedLabel})`);
         }
 
         function toggleTtsSpeed() {
-            if (state.ttsRate > 0.65) {
+            if (getActiveTtsRate() > 0.65) {
                 state.ttsRate = 0.58;
             } else {
                 state.ttsRate = 0.72;
             }
             updateTtsSpeedButton();
-            const spokenGuide = state.ttsRate <= 0.62 ? '더 천천히 말해요' : '천천히 말해요';
+            const spokenGuide = getActiveTtsRate() <= 0.62 ? '더 천천히 말해요' : '천천히 말해요';
             speakText(spokenGuide);
         }
 
         function updateTtsSpeedButton() {
             const btn = document.getElementById('tts-speed-toggle-btn');
             if (!btn) return;
-            if (state.ttsRate <= 0.62) {
+            if (getActiveTtsRate() <= 0.62) {
                 btn.textContent = '🐢 말하기 : 더 천천히';
             } else {
                 btn.textContent = '🐢 말하기 : 천천히';
@@ -966,8 +1003,8 @@
             const toolbar = document.getElementById('draw-toolbar');
             if (canvas) {
                 canvas.classList.toggle('hidden', !state.drawMode);
-                canvas.width = 270;
-                canvas.height = 270;
+                canvas.width = 240;
+                canvas.height = 240;
             }
             if (toolbar) toolbar.classList.toggle('hidden', !state.drawMode);
             updateMainClockUI();
@@ -986,6 +1023,10 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            if ('speechSynthesis' in window && typeof window.speechSynthesis.getVoices === 'function') {
+                window.speechSynthesis.getVoices();
+            }
+
             const canvas = document.getElementById('main-draw-canvas');
             if (canvas) {
                 canvas.addEventListener('pointerdown', (e) => {
@@ -1015,26 +1056,31 @@
             const cy = canvas.height / 2;
 
             if (state.drawnHands.hourDeg !== null) {
-                const rad = ((state.drawnHands.hourDeg - 90) * Math.PI) / 180;
+                const rad = (state.drawnHands.hourDeg * Math.PI) / 180;
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
-                ctx.lineTo(cx + Math.cos(rad) * 68, cy + Math.sin(rad) * 68);
+                ctx.lineTo(cx + Math.sin(rad) * 54, cy - Math.cos(rad) * 54);
                 ctx.strokeStyle = '#ef4444';
-                ctx.lineWidth = 7;
+                ctx.lineWidth = 7.5;
                 ctx.lineCap = 'round';
                 ctx.stroke();
             }
 
             if (state.drawnHands.minuteDeg !== null) {
-                const rad = ((state.drawnHands.minuteDeg - 90) * Math.PI) / 180;
+                const rad = (state.drawnHands.minuteDeg * Math.PI) / 180;
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
-                ctx.lineTo(cx + Math.cos(rad) * 98, cy + Math.sin(rad) * 98);
+                ctx.lineTo(cx + Math.sin(rad) * 82, cy - Math.cos(rad) * 82);
                 ctx.strokeStyle = '#2563eb';
                 ctx.lineWidth = 5;
                 ctx.lineCap = 'round';
                 ctx.stroke();
             }
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, 6.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fill();
         }
 
         function checkDrawnHands() {
@@ -1048,13 +1094,13 @@
             const cy = canvas.height / 2;
 
             [
-                { deg: hourAngle, len: 68, color: 'rgba(239,68,68,0.35)', w: 8 },
-                { deg: minuteAngle, len: 98, color: 'rgba(37,99,235,0.35)', w: 5 }
+                { deg: hourAngle, len: 54, color: 'rgba(239,68,68,0.38)', w: 8 },
+                { deg: minuteAngle, len: 82, color: 'rgba(37,99,235,0.38)', w: 5.5 }
             ].forEach((h) => {
-                const rad = ((h.deg - 90) * Math.PI) / 180;
+                const rad = (h.deg * Math.PI) / 180;
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
-                ctx.lineTo(cx + Math.cos(rad) * h.len, cy + Math.sin(rad) * h.len);
+                ctx.lineTo(cx + Math.sin(rad) * h.len, cy - Math.cos(rad) * h.len);
                 ctx.strokeStyle = h.color;
                 ctx.lineWidth = h.w;
                 ctx.lineCap = 'round';
@@ -1068,8 +1114,11 @@
             const card = document.createElement('div');
             card.className = 'rounded-2xl bg-slate-50 border border-slate-200 p-4 flex flex-col items-center justify-between gap-3';
 
-            const clockId = `guide-clock-${hour}-${minute}-${Math.random().toString(36).slice(2, 6)}`;
-            const { hourAngle, minuteAngle } = getHandAngles(hour, minute);
+            const clockSvg = createPrecisionClockSVG({
+                hour,
+                minute,
+                compact: true
+            });
 
             card.innerHTML = `
                 <div class="w-full flex items-center justify-between gap-2">
@@ -1078,17 +1127,14 @@
                         🔊 듣기
                     </button>
                 </div>
-                <div id="${clockId}" class="clock-face clock-face-sm">
-                    <div class="clock-hand hour-hand" style="height: 38px; transform: translateX(-50%) rotate(${hourAngle}deg);"></div>
-                    <div class="clock-hand minute-hand" style="height: 54px; transform: translateX(-50%) rotate(${minuteAngle}deg);"></div>
-                    <div class="clock-center-cap"></div>
+                <div class="clock-face clock-face-sm">
+                    ${clockSvg}
                 </div>
                 <div class="w-full text-center rounded-xl bg-slate-900 text-sky-300 py-1.5 text-base font-black tracking-wider">
                     ${digitalBadgeText}
                 </div>
             `;
 
-            setTimeout(() => buildClockDialMarks(clockId, 148), 0);
             return card;
         }
 
@@ -1130,8 +1176,15 @@
             card.className = 'rounded-2xl bg-white border border-emerald-200 p-4 flex flex-col items-center justify-between gap-3 shadow-2xs';
 
             const secText = `${secondsVal}초`;
-            const clockId = `sec-only-clock-${secondsVal}-${Math.random().toString(36).slice(2, 6)}`;
-            const secAngle = secondsVal * 6;
+            const clockSvg = createPrecisionClockSVG({
+                hour: 12,
+                minute: 0,
+                second: secondsVal,
+                showHourHand: false,
+                showMinuteHand: false,
+                showSecondHand: true,
+                compact: true
+            });
 
             card.innerHTML = `
                 <div class="w-full flex items-center justify-between gap-2">
@@ -1144,19 +1197,14 @@
                         🔊 「${secText}」 듣기
                     </button>
                 </div>
-                <div id="${clockId}" class="clock-face clock-face-sm">
-                    <div
-                        class="clock-hand"
-                        style="width: 3px; margin-left: -1.5px; height: 56px; background: #10b981; z-index: 25; transform: translateX(-50%) rotate(${secAngle}deg);"
-                    ></div>
-                    <div class="clock-center-cap"></div>
+                <div class="clock-face clock-face-sm">
+                    ${clockSvg}
                 </div>
                 <div class="w-full text-center rounded-xl bg-emerald-950 text-emerald-300 py-2 text-xl font-black tracking-wide">
                     ${secText}
                 </div>
             `;
 
-            setTimeout(() => buildClockDialMarks(clockId, 148), 0);
             return card;
         }
 
@@ -1259,18 +1307,19 @@
         }
 
         function renderCalcMode() {
-            buildClockDialMarks('calc-analog-clock', 240);
             const promptEl = document.getElementById('calc-question-prompt');
             const dirLabel = state.calc.direction === 1 ? '후' : '전';
             if (promptEl) {
                 promptEl.textContent = `${state.calc.baseHour}시 ${state.calc.baseMinute}분에서 ${state.calc.delta}분 ${dirLabel}는 몇 시 몇 분일까요?`;
             }
 
-            const { hourAngle, minuteAngle } = getHandAngles(state.calc.baseHour, state.calc.baseMinute);
-            const hHand = document.getElementById('calc-hour-hand');
-            const mHand = document.getElementById('calc-minute-hand');
-            if (hHand) hHand.style.transform = `translateX(-50%) rotate(${hourAngle}deg)`;
-            if (mHand) mHand.style.transform = `translateX(-50%) rotate(${minuteAngle}deg)`;
+            const calcSlot = document.getElementById('calc-svg-clock-slot');
+            if (calcSlot) {
+                calcSlot.innerHTML = createPrecisionClockSVG({
+                    hour: state.calc.baseHour,
+                    minute: state.calc.baseMinute
+                });
+            }
 
             const fb = document.getElementById('calc-result-feedback');
             if (fb) fb.textContent = '시와 분을 입력하고 [정답 확인]을 눌러 보세요.';
@@ -1316,23 +1365,23 @@
             const shuffledLabels = [...pool].sort(() => Math.random() - 0.5);
 
             pool.forEach((item) => {
-                const cId = `match-clock-${item.id}`;
-                const { hourAngle, minuteAngle } = getHandAngles(item.h, item.m);
+                const clockSvg = createPrecisionClockSVG({
+                    hour: item.h,
+                    minute: item.m,
+                    compact: true
+                });
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.id = `match-clock-btn-${item.id}`;
                 btn.onclick = () => selectMatchClock(item.id);
                 btn.className = 'w-full rounded-2xl bg-slate-50 hover:bg-indigo-50 border-2 border-slate-200 p-3 flex items-center gap-4 transition cursor-pointer';
                 btn.innerHTML = `
-                    <div id="${cId}" class="clock-face clock-face-sm shrink-0">
-                        <div class="clock-hand hour-hand" style="height: 38px; transform: translateX(-50%) rotate(${hourAngle}deg);"></div>
-                        <div class="clock-hand minute-hand" style="height: 54px; transform: translateX(-50%) rotate(${minuteAngle}deg);"></div>
-                        <div class="clock-center-cap"></div>
+                    <div class="clock-face clock-face-sm shrink-0">
+                        ${clockSvg}
                     </div>
                     <span class="text-sm font-bold text-slate-700">시계 선택</span>
                 `;
                 clocksCol.appendChild(btn);
-                setTimeout(() => buildClockDialMarks(cId, 148), 0);
             });
 
             shuffledLabels.forEach((item) => {
@@ -1413,8 +1462,11 @@
             container.innerHTML = '';
 
             state.routines.forEach((item, idx) => {
-                const cId = `routine-clock-${idx}`;
-                const { hourAngle, minuteAngle } = getHandAngles(item.hour, item.minute);
+                const clockSvg = createPrecisionClockSVG({
+                    hour: item.hour,
+                    minute: item.minute,
+                    compact: true
+                });
 
                 const row = document.createElement('div');
                 row.className = 'print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-6';
@@ -1425,10 +1477,8 @@
                         <p class="text-sm font-bold text-indigo-700">${item.hour}시 ${String(item.minute).padStart(2, '0')}분</p>
                     </div>
                     <div class="flex items-center gap-5">
-                        <div id="${cId}" class="clock-face clock-face-sm shrink-0">
-                            <div class="clock-hand hour-hand" style="height: 38px; transform: translateX(-50%) rotate(${hourAngle}deg);"></div>
-                            <div class="clock-hand minute-hand" style="height: 54px; transform: translateX(-50%) rotate(${minuteAngle}deg);"></div>
-                            <div class="clock-center-cap"></div>
+                        <div class="clock-face clock-face-sm shrink-0">
+                            ${clockSvg}
                         </div>
                         <button type="button" onclick="speakText('${item.hour}시 ${item.minute}분에 ${item.title}')" class="no-print rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold cursor-pointer">
                             🔊 듣기
@@ -1436,7 +1486,6 @@
                     </div>
                 `;
                 container.appendChild(row);
-                setTimeout(() => buildClockDialMarks(cId, 148), 0);
             });
         }
 
