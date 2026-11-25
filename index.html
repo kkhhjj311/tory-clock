@@ -454,24 +454,87 @@
             <section id="routine-list-container" class="space-y-4"></section>
         </main>
 
-        <!-- 모드 6 -->
+        <!-- 모드 6: 24시간 원형 하루 계획표 그리기 (0~24시/분 입력 · 수정 · 삭제 지원) -->
         <main id="mode-panel-6" class="mode-panel hidden max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
-            <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                <div class="space-y-4">
-                    <h2 class="text-xl font-black text-slate-900">🗓 하루 계획표 그리기</h2>
-                    <div class="no-print grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <input id="plan-time-input" type="text" placeholder="09:00 ~ 10:00" class="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
-                        <input id="plan-activity-input" type="text" placeholder="시계 공부하기" class="sm:col-span-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
+            <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div class="lg:col-span-6 space-y-4">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <h2 class="text-xl font-black text-slate-900">🗓 하루 계획표 그리기 (0시 ~ 24시)</h2>
+                        <span id="plan-form-mode-badge" class="rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-xs font-extrabold">
+                            새 항목 추가
+                        </span>
                     </div>
-                    <div class="no-print flex gap-2">
-                        <button type="button" onclick="addPlanEntry()" class="rounded-xl bg-indigo-600 text-white px-4 py-2 text-xs font-bold cursor-pointer">계획 추가</button>
-                        <button type="button" onclick="resetPlanEntries()" class="rounded-xl bg-slate-100 text-slate-700 px-4 py-2 text-xs font-bold cursor-pointer">초기화</button>
+
+                    <div class="no-print rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="rounded-xl bg-white border border-slate-200 p-3 space-y-1.5">
+                                <div class="text-xs font-extrabold text-slate-700">시작 시각 (0~24시 / 0~59분)</div>
+                                <div class="flex items-center gap-1.5">
+                                    <input id="plan-start-hour" type="number" min="0" max="24" value="7" class="w-16 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-sm font-black text-indigo-700" />
+                                    <span class="text-xs font-bold text-slate-600">시</span>
+                                    <input id="plan-start-minute" type="number" min="0" max="59" value="30" class="w-16 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-sm font-black text-sky-700" />
+                                    <span class="text-xs font-bold text-slate-600">분</span>
+                                </div>
+                            </div>
+
+                            <div class="rounded-xl bg-white border border-slate-200 p-3 space-y-1.5">
+                                <div class="text-xs font-extrabold text-slate-700">끝 시각 (0~24시 / 0~59분)</div>
+                                <div class="flex items-center gap-1.5">
+                                    <input id="plan-end-hour" type="number" min="0" max="24" value="9" class="w-16 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-sm font-black text-indigo-700" />
+                                    <span class="text-xs font-bold text-slate-600">시</span>
+                                    <input id="plan-end-minute" type="number" min="0" max="59" value="0" class="w-16 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-sm font-black text-sky-700" />
+                                    <span class="text-xs font-bold text-slate-600">분</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input
+                                id="plan-activity-input"
+                                type="text"
+                                placeholder="할 일 이름 (예: 씻기·아침, 자유 놀이, 잠)"
+                                class="flex-1 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold"
+                            />
+                            <select
+                                id="plan-color-select"
+                                class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800"
+                            >
+                                <option value="#dbeafe">하늘색</option>
+                                <option value="#dcfce7">연두색</option>
+                                <option value="#ffedd5">복숭아색</option>
+                                <option value="#fef08a">노란색</option>
+                                <option value="#ede9fe">연보라색</option>
+                                <option value="#fce7f3">분홍색</option>
+                            </select>
+                        </div>
+
+                        <div id="plan-form-error" class="hidden rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700"></div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" id="plan-submit-btn" onclick="savePlanEntry()" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
+                                계획 추가
+                            </button>
+                            <button type="button" id="plan-cancel-edit-btn" onclick="cancelEditPlanEntry()" class="hidden rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 px-4 py-2 text-xs font-bold cursor-pointer">
+                                수정 취소
+                            </button>
+                            <button type="button" onclick="clearAllPlanEntries()" class="rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-4 py-2 text-xs font-bold cursor-pointer">
+                                전체 지우기
+                            </button>
+                            <button type="button" onclick="resetPlanEntries()" class="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 text-xs font-bold cursor-pointer">
+                                기본 예시 복원
+                            </button>
+                        </div>
                     </div>
-                    <ul id="plan-entries-list" class="space-y-2 pt-2"></ul>
+
+                    <ul id="plan-entries-list" class="space-y-2 pt-1"></ul>
                 </div>
 
-                <div class="flex flex-col items-center">
-                    <canvas id="schedule-pie-canvas" width="280" height="280" class="rounded-full border-4 border-slate-800 shadow-md bg-white"></canvas>
+                <div class="lg:col-span-6 flex flex-col items-center">
+                    <div class="w-full rounded-3xl bg-[#f4f6f9] border border-slate-200 p-4 sm:p-6 flex flex-col items-center">
+                        <div class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">24시간 원형 계획표</div>
+                        <div class="text-xs font-semibold text-slate-500 mt-0.5 mb-3">맨 위 0 = 밤 12시(24시) · 시계 방향 0 ~ 23시</div>
+                        <canvas id="schedule-pie-canvas" width="440" height="440" class="w-full max-w-[380px] aspect-square bg-white rounded-2xl shadow-sm border border-slate-200"></canvas>
+                    </div>
                 </div>
             </section>
         </main>
@@ -674,10 +737,13 @@
         ];
 
         const DEFAULT_PLANS = [
-            { id: 'p1', time: '07:30 ~ 08:30', activity: '아침 식사 및 준비하기', color: '#fde68a' },
-            { id: 'p2', time: '09:00 ~ 12:00', activity: '유치원·학교 즐거운 활동', color: '#bfdbfe' },
-            { id: 'p3', time: '12:00 ~ 13:00', activity: '점심 식사 및 휴식', color: '#bbf7d0' },
-            { id: 'p4', time: '15:00 ~ 16:00', activity: '토리쌤과 시계 공부하기', color: '#ddd6fe' }
+            { id: 'p1', startMinutes: 0, endMinutes: 450, activity: '잠', color: '#dbeafe' },
+            { id: 'p2', startMinutes: 450, endMinutes: 540, activity: '씻기·아침', color: '#dcfce7' },
+            { id: 'p3', startMinutes: 540, endMinutes: 720, activity: '시계 공부', color: '#ffedd5' },
+            { id: 'p4', startMinutes: 720, endMinutes: 810, activity: '점심', color: '#dbeafe' },
+            { id: 'p5', startMinutes: 810, endMinutes: 1080, activity: '자유 놀이', color: '#fef08a' },
+            { id: 'p6', startMinutes: 1080, endMinutes: 1320, activity: '저녁·가족', color: '#ede9fe' },
+            { id: 'p7', startMinutes: 1320, endMinutes: 1440, activity: '책·잠자리', color: '#fce7f3' }
         ];
 
         let state = {
@@ -705,7 +771,8 @@
             selectedLabelId: null,
             matchedIds: [],
             routines: [...DEFAULT_ROUTINES],
-            plans: [...DEFAULT_PLANS]
+            plans: DEFAULT_PLANS.map(item => ({ ...item })),
+            editingPlanId: null
         };
 
         function loadState() {
@@ -717,6 +784,12 @@
                     if (!Array.isArray(state.chiefEmails)) state.chiefEmails = [];
                     if (!Array.isArray(state.members)) state.members = [];
                     if (!state.adminSettingsPassword) state.adminSettingsPassword = '1234';
+                    if (!Array.isArray(state.plans)) {
+                        state.plans = DEFAULT_PLANS.map(item => ({ ...item }));
+                    } else {
+                        state.plans = state.plans.map(normalizePlanItem).filter(Boolean);
+                    }
+                    state.editingPlanId = null;
                 }
             } catch (e) {
                 console.warn('저장된 상태 불러오기 실패:', e);
@@ -766,14 +839,12 @@
                 .filter((e, idx, arr) => isValidEmail(e) && arr.indexOf(e) === idx)
                 .slice(0, 2);
 
-            // 기존 chief 표시가 빠진 멤버 정리
             state.members.forEach(m => {
                 if (m.role === 'chief' && !state.chiefEmails.includes(m.email.toLowerCase())) {
                     m.role = 'general';
                 }
             });
 
-            // chiefEmails는 항상 members 목록에도 active chief로 유지
             state.chiefEmails.forEach(ce => {
                 const existing = state.members.find(m => m.email.toLowerCase() === ce);
                 if (existing) {
@@ -791,9 +862,9 @@
             if (state.chiefEmails.length === 0) {
                 badge.textContent = '최초 로그인 시 최종관리자(최대 2인) 등록';
             } else if (state.chiefEmails.length === 1) {
-                badge.textContent = `최종관리자 1인 등록됨 (추가 1인 가능)`;
+                badge.textContent = '최종관리자 1인 등록됨 (추가 1인 가능)';
             } else {
-                badge.textContent = `최종관리자 2인 등록 완료`;
+                badge.textContent = '최종관리자 2인 등록 완료';
             }
         }
 
@@ -808,7 +879,6 @@
                 return;
             }
 
-            // 정지 또는 추방 여부 확인
             const status = getUserStatus(emailInput);
             if (status === 'suspended') {
                 deniedBox.textContent = '정지된 계정입니다. 관리자 또는 최종관리자에게 문의해 주세요.';
@@ -821,7 +891,6 @@
                 return;
             }
 
-            // 최초 최종관리자 2인 자동 등록 (비어 있을 때 참여 코드 없이 최초 1인은 즉시 등록)
             if (state.chiefEmails.length === 0) {
                 state.chiefEmails.push(emailInput);
                 if (codeInput) state.inviteCode = codeInput;
@@ -832,7 +901,6 @@
                 !state.chiefEmails.includes(emailInput) &&
                 codeInput === state.inviteCode
             ) {
-                // 두 번째 인원이 올바른 참여 코드로 최초 입장 시 최종관리자 2인으로 등록
                 state.chiefEmails.push(emailInput);
                 syncChiefMembersList();
                 saveState();
@@ -845,7 +913,6 @@
                 }
             }
 
-            // 회원 명단에 없으면 일반(general)으로 등록
             if (!state.members.some(m => m.email.toLowerCase() === emailInput)) {
                 const assignedRole = state.chiefEmails.includes(emailInput) ? 'chief' : 'general';
                 state.members.push({ email: emailInput, role: assignedRole, status: 'active' });
@@ -875,7 +942,6 @@
                 roleBadge.className = 'rounded-full bg-slate-200 text-slate-700 px-2.5 py-0.5 text-xs font-bold';
             }
 
-            // 일반 회원은 설정 버튼 잠금 표시
             if (role === 'general') {
                 adminBtn.classList.add('opacity-50');
                 adminBtn.title = '일반 회원은 관리자 설정에 접근할 수 없습니다.';
@@ -904,7 +970,6 @@
                 showToast('이용이 제한된 계정입니다.');
                 return;
             }
-            // 최종관리자, 관리자, 일반 모두 인쇄 가능
             if (role === 'chief' || role === 'admin' || role === 'general') {
                 window.print();
             }
@@ -958,7 +1023,6 @@
             const isChief = role === 'chief';
             document.getElementById('modal-current-role-pill').textContent = ROLE_LABELS[role];
 
-            // 참여 코드: 관리자는 확인(읽기전용), 최종관리자는 변경 가능
             const inviteInput = document.getElementById('admin-invite-code-input');
             const inviteBtn = document.getElementById('save-invite-code-btn');
             const inviteTag = document.getElementById('invite-code-perm-tag');
@@ -968,7 +1032,6 @@
             inviteBtn.classList.toggle('hidden', !isChief);
             inviteTag.textContent = isChief ? '최종관리자 변경 가능' : '관리자 확인 전용 (변경 불가)';
 
-            // 설정 페이지 비밀번호: 관리자는 열람 가능, 최종관리자만 변경 가능
             const pwInput = document.getElementById('admin-settings-pw-input');
             const pwBtn = document.getElementById('save-settings-pw-btn');
             const pwTag = document.getElementById('settings-pw-perm-tag');
@@ -978,7 +1041,6 @@
             pwBtn.classList.toggle('hidden', !isChief);
             pwTag.textContent = isChief ? '최종관리자 변경 가능' : '관리자 열람 전용 (변경 불가)';
 
-            // 최종관리자 2인 이메일 설정: 최종관리자만 수정 가능
             const chief1 = document.getElementById('chief-email-1');
             const chief2 = document.getElementById('chief-email-2');
             const saveChiefBtn = document.getElementById('save-chief-emails-btn');
@@ -1134,7 +1196,7 @@
             if (!ul) return;
 
             if (state.members.length === 0) {
-                ul.innerHTML = `<li class="text-slate-400">등록된 회원이 없습니다.</li>`;
+                ul.innerHTML = '<li class="text-slate-400">등록된 회원이 없습니다.</li>';
                 return;
             }
 
@@ -1150,13 +1212,13 @@
                 const status = m.status || 'active';
                 const statusBadge =
                     status === 'suspended'
-                        ? `<span class="rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 font-bold">정지됨</span>`
+                        ? '<span class="rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 font-bold">정지됨</span>'
                         : status === 'expelled'
-                        ? `<span class="rounded-full bg-rose-100 text-rose-800 px-2 py-0.5 font-bold">추방됨</span>`
-                        : `<span class="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 font-bold">정상</span>`;
+                        ? '<span class="rounded-full bg-rose-100 text-rose-800 px-2 py-0.5 font-bold">추방됨</span>'
+                        : '<span class="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 font-bold">정상</span>';
 
                 const actionsHtml = isChief
-                    ? `<span class="text-slate-400 font-bold">보호됨</span>`
+                    ? '<span class="text-slate-400 font-bold">보호됨</span>'
                     : `
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <button type="button" onclick="toggleMemberRole('${m.email}')" class="rounded-lg bg-slate-100 hover:bg-slate-200 px-2.5 py-1 font-bold text-slate-700 cursor-pointer">
@@ -1355,6 +1417,9 @@
                     ? 'mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow cursor-pointer'
                     : 'mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer';
             });
+            if (modeNum === 6) {
+                renderPlanEntries();
+            }
         }
 
         // =========================================================
@@ -1866,82 +1931,387 @@
         }
 
         // =========================================================
-        // 모드 6: 하루 계획표 그리기
+        // 모드 6: 24시간 원형 하루 계획표 그리기 (0~24시/분 · 수정 · 삭제)
         // =========================================================
+        function minutesToHhMm(totalMin) {
+            const clamped = Math.max(0, Math.min(1440, Number(totalMin) || 0));
+            const h = Math.floor(clamped / 60);
+            const m = clamped % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+
+        function parseHhMmToMinutes(str) {
+            const match = String(str || '').trim().match(/^(\d{1,2})\s*:\s*(\d{1,2})$/);
+            if (!match) return null;
+            const h = parseInt(match[1], 10);
+            const m = parseInt(match[2], 10);
+            if (isNaN(h) || isNaN(m) || h < 0 || h > 24 || m < 0 || m > 59) return null;
+            if (h === 24 && m > 0) return null;
+            return h * 60 + m;
+        }
+
+        function normalizePlanItem(item) {
+            if (!item || typeof item !== 'object') return null;
+            const activity = String(item.activity || '').trim();
+            if (!activity) return null;
+
+            if (typeof item.startMinutes === 'number' && typeof item.endMinutes === 'number') {
+                return {
+                    id: item.id || `p_${Math.random().toString(36).slice(2, 8)}`,
+                    startMinutes: Math.max(0, Math.min(1439, Math.floor(item.startMinutes))),
+                    endMinutes: Math.max(1, Math.min(1440, Math.floor(item.endMinutes))),
+                    activity,
+                    color: item.color || '#dbeafe'
+                };
+            }
+
+            if (typeof item.time === 'string') {
+                const parts = item.time.split('~');
+                if (parts.length === 2) {
+                    const s = parseHhMmToMinutes(parts[0]);
+                    const e = parseHhMmToMinutes(parts[1]);
+                    if (s !== null && e !== null) {
+                        const endAdj = e === 0 && s > 0 ? 1440 : e;
+                        return {
+                            id: item.id || `p_${Math.random().toString(36).slice(2, 8)}`,
+                            startMinutes: s,
+                            endMinutes: endAdj,
+                            activity,
+                            color: item.color || '#dbeafe'
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+
+        function showPlanFormError(msg) {
+            const errEl = document.getElementById('plan-form-error');
+            if (!errEl) return;
+            errEl.textContent = msg;
+            errEl.classList.remove('hidden');
+        }
+
+        function clearPlanFormError() {
+            const errEl = document.getElementById('plan-form-error');
+            if (!errEl) return;
+            errEl.textContent = '';
+            errEl.classList.add('hidden');
+        }
+
+        function syncPlanFormModeUI() {
+            const badge = document.getElementById('plan-form-mode-badge');
+            const submitBtn = document.getElementById('plan-submit-btn');
+            const cancelBtn = document.getElementById('plan-cancel-edit-btn');
+            if (!badge || !submitBtn || !cancelBtn) return;
+
+            if (state.editingPlanId) {
+                badge.textContent = '항목 수정 중';
+                badge.className = 'rounded-full bg-amber-100 text-amber-900 px-3 py-1 text-xs font-extrabold';
+                submitBtn.textContent = '수정 저장';
+                cancelBtn.classList.remove('hidden');
+            } else {
+                badge.textContent = '새 항목 추가';
+                badge.className = 'rounded-full bg-indigo-100 text-indigo-800 px-3 py-1 text-xs font-extrabold';
+                submitBtn.textContent = '계획 추가';
+                cancelBtn.classList.add('hidden');
+            }
+        }
+
+        function resetPlanInputs() {
+            document.getElementById('plan-start-hour').value = '9';
+            document.getElementById('plan-start-minute').value = '0';
+            document.getElementById('plan-end-hour').value = '10';
+            document.getElementById('plan-end-minute').value = '0';
+            document.getElementById('plan-activity-input').value = '';
+            document.getElementById('plan-color-select').value = '#dbeafe';
+        }
+
+        function savePlanEntry() {
+            clearPlanFormError();
+            const shRaw = parseInt(document.getElementById('plan-start-hour').value, 10);
+            const smRaw = parseInt(document.getElementById('plan-start-minute').value, 10);
+            const ehRaw = parseInt(document.getElementById('plan-end-hour').value, 10);
+            const emRaw = parseInt(document.getElementById('plan-end-minute').value, 10);
+            const activity = document.getElementById('plan-activity-input').value.trim();
+            const color = document.getElementById('plan-color-select').value || '#dbeafe';
+
+            if (isNaN(shRaw) || isNaN(smRaw) || isNaN(ehRaw) || isNaN(emRaw)) {
+                showPlanFormError('시작과 끝의 시(0~24)와 분(0~59)을 숫자로 입력해 주세요.');
+                return;
+            }
+            if (shRaw < 0 || shRaw > 24 || ehRaw < 0 || ehRaw > 24) {
+                showPlanFormError('시는 0시부터 24시 사이로 입력해 주세요.');
+                return;
+            }
+            if (smRaw < 0 || smRaw > 59 || emRaw < 0 || emRaw > 59) {
+                showPlanFormError('분은 0분부터 59분 사이로 입력해 주세요.');
+                return;
+            }
+            if ((shRaw === 24 && smRaw > 0) || (ehRaw === 24 && emRaw > 0)) {
+                showPlanFormError('24시는 24시 0분까지만 입력할 수 있습니다.');
+                return;
+            }
+            if (!activity) {
+                showPlanFormError('일과 이름을 입력해 주세요.');
+                return;
+            }
+
+            const startMinutes = shRaw * 60 + smRaw;
+            const endMinutes = ehRaw * 60 + emRaw;
+
+            if (startMinutes === endMinutes) {
+                showPlanFormError('시작 시각과 끝 시각이 같을 수 없습니다.');
+                return;
+            }
+
+            if (state.editingPlanId) {
+                const idx = state.plans.findIndex(p => p.id === state.editingPlanId);
+                if (idx !== -1) {
+                    state.plans[idx] = {
+                        ...state.plans[idx],
+                        startMinutes,
+                        endMinutes,
+                        activity,
+                        color
+                    };
+                }
+                state.editingPlanId = null;
+                syncPlanFormModeUI();
+                resetPlanInputs();
+                saveState();
+                renderPlanEntries();
+                showToast('일과 계획이 수정되었습니다.');
+                return;
+            }
+
+            state.plans.push({
+                id: `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                startMinutes,
+                endMinutes,
+                activity,
+                color
+            });
+
+            resetPlanInputs();
+            saveState();
+            renderPlanEntries();
+            showToast('24시간 계획표에 추가되었습니다.');
+        }
+
+        function startEditPlanEntry(id) {
+            const target = state.plans.find(p => p.id === id);
+            if (!target) return;
+            clearPlanFormError();
+            state.editingPlanId = target.id;
+            const sH = Math.floor(target.startMinutes / 60);
+            const sM = target.startMinutes % 60;
+            const eH = Math.floor(target.endMinutes / 60);
+            const eM = target.endMinutes % 60;
+
+            document.getElementById('plan-start-hour').value = sH;
+            document.getElementById('plan-start-minute').value = sM;
+            document.getElementById('plan-end-hour').value = eH;
+            document.getElementById('plan-end-minute').value = eM;
+            document.getElementById('plan-activity-input').value = target.activity;
+            document.getElementById('plan-color-select').value = target.color || '#dbeafe';
+            syncPlanFormModeUI();
+            document.getElementById('plan-activity-input').focus();
+        }
+
+        function cancelEditPlanEntry() {
+            state.editingPlanId = null;
+            clearPlanFormError();
+            syncPlanFormModeUI();
+            resetPlanInputs();
+        }
+
+        function deletePlanEntry(id) {
+            if (state.editingPlanId === id) {
+                state.editingPlanId = null;
+                syncPlanFormModeUI();
+                resetPlanInputs();
+            }
+            state.plans = state.plans.filter(p => p.id !== id);
+            saveState();
+            renderPlanEntries();
+            showToast('일과 항목이 삭제되었습니다.');
+        }
+
+        function clearAllPlanEntries() {
+            state.editingPlanId = null;
+            state.plans = [];
+            clearPlanFormError();
+            syncPlanFormModeUI();
+            resetPlanInputs();
+            saveState();
+            renderPlanEntries();
+            showToast('계획표를 모두 지웠습니다. 새 일과를 추가해 보세요.');
+        }
+
+        function resetPlanEntries() {
+            state.editingPlanId = null;
+            state.plans = DEFAULT_PLANS.map((item, i) => ({ ...item, id: `p_def_${i}_${Date.now()}` }));
+            clearPlanFormError();
+            syncPlanFormModeUI();
+            resetPlanInputs();
+            saveState();
+            renderPlanEntries();
+            showToast('기본 24시간 계획표 예시로 복원했습니다.');
+        }
+
+        function getPlanDurationMinutes(plan) {
+            const diff = plan.endMinutes - plan.startMinutes;
+            return diff > 0 ? diff : diff + 1440;
+        }
+
         function renderPlanEntries() {
+            syncPlanFormModeUI();
             const list = document.getElementById('plan-entries-list');
             if (list) {
-                list.innerHTML = state.plans.map(p => `
-                    <li class="flex items-center justify-between rounded-xl border border-slate-200 px-3.5 py-2 text-sm">
-                        <div class="flex items-center gap-2.5">
-                            <span class="inline-block w-3.5 h-3.5 rounded-full" style="background:${p.color}"></span>
-                            <span class="font-extrabold text-indigo-700">${p.time}</span>
-                            <span class="font-bold text-slate-800">${p.activity}</span>
-                        </div>
-                        <button type="button" onclick="speakText('${p.time} ${p.activity}')" class="no-print text-xs font-bold text-slate-500 hover:text-indigo-700 cursor-pointer">🔊</button>
-                    </li>
-                `).join('');
+                if (!state.plans.length) {
+                    list.innerHTML = '<li class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-4 text-center text-xs font-bold text-slate-500">등록된 일과가 없습니다. 위에서 시작·끝 시/분을 입력해 새 계획표를 만들어 보세요.</li>';
+                } else {
+                    list.innerHTML = state.plans.map(p => {
+                        const rangeLabel = `${minutesToHhMm(p.startMinutes)} ~ ${minutesToHhMm(p.endMinutes)}`;
+                        const durMin = getPlanDurationMinutes(p);
+                        const durH = Math.floor(durMin / 60);
+                        const durM = durMin % 60;
+                        const durText = durH > 0 && durM > 0 ? `${durH}시간 ${durM}분` : durH > 0 ? `${durH}시간` : `${durM}분`;
+                        const safeSpoken = `${rangeLabel} ${p.activity}`.replace(/'/g, "\\'");
+
+                        return `
+                            <li class="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm shadow-2xs">
+                                <div class="flex items-center gap-2.5 flex-wrap">
+                                    <span class="inline-block w-4 h-4 rounded-md border border-slate-400/50 shrink-0" style="background:${p.color}"></span>
+                                    <span class="font-extrabold text-indigo-700">${rangeLabel}</span>
+                                    <span class="text-xs font-bold text-slate-400">(${durText})</span>
+                                    <span class="font-black text-slate-900">${p.activity}</span>
+                                </div>
+                                <div class="no-print flex items-center gap-1.5">
+                                    <button type="button" onclick="speakText('${safeSpoken}')" class="rounded-lg bg-slate-100 hover:bg-slate-200 px-2 py-1 text-xs font-bold text-slate-700 cursor-pointer" title="음성 듣기">🔊</button>
+                                    <button type="button" onclick="startEditPlanEntry('${p.id}')" class="rounded-lg bg-amber-100 hover:bg-amber-200 px-2.5 py-1 text-xs font-bold text-amber-900 cursor-pointer">수정</button>
+                                    <button type="button" onclick="deletePlanEntry('${p.id}')" class="rounded-lg bg-rose-100 hover:bg-rose-200 px-2.5 py-1 text-xs font-bold text-rose-800 cursor-pointer">삭제</button>
+                                </div>
+                            </li>
+                        `;
+                    }).join('');
+                }
             }
             drawSchedulePie();
+        }
+
+        function minutesTo24hAngleRad(minutesFromMidnight) {
+            const normalized = ((minutesFromMidnight % 1440) + 1440) % 1440;
+            const deg = (normalized / 1440) * 360 - 90;
+            return (deg * Math.PI) / 180;
         }
 
         function drawSchedulePie() {
             const canvas = document.getElementById('schedule-pie-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const r = 124;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const dpr = window.devicePixelRatio || 1;
+            const logicalSize = 440;
+            if (canvas.width !== logicalSize * dpr || canvas.height !== logicalSize * dpr) {
+                canvas.width = logicalSize * dpr;
+                canvas.height = logicalSize * dpr;
+            }
+            ctx.save();
+            ctx.scale(dpr, dpr);
 
-            const count = Math.max(1, state.plans.length);
-            const sliceAngle = (Math.PI * 2) / count;
+            const cx = logicalSize / 2;
+            const cy = logicalSize / 2;
+            const outerR = 166;
+            const labelRingR = 192;
 
-            state.plans.forEach((p, idx) => {
-                const start = -Math.PI / 2 + idx * sliceAngle;
-                const end = start + sliceAngle;
+            ctx.clearRect(0, 0, logicalSize, logicalSize);
+
+            // 빈 24시간 원판 바탕
+            ctx.beginPath();
+            ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+            ctx.fillStyle = '#f8fafc';
+            ctx.fill();
+
+            // 각 계획 섹터 그리기 (자정 넘김 처리 포함)
+            state.plans.forEach(p => {
+                const dur = getPlanDurationMinutes(p);
+                const startRad = minutesTo24hAngleRad(p.startMinutes);
+                const sweepRad = (dur / 1440) * Math.PI * 2;
+                const endRad = startRad + sweepRad;
+
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
-                ctx.arc(cx, cy, r, start, end);
+                ctx.arc(cx, cy, outerR, startRad, endRad, false);
                 ctx.closePath();
-                ctx.fillStyle = p.color || '#e0e7ff';
+                ctx.fillStyle = p.color || '#dbeafe';
                 ctx.fill();
+                ctx.lineWidth = 1.6;
                 ctx.strokeStyle = '#334155';
-                ctx.lineWidth = 2;
                 ctx.stroke();
 
-                const mid = (start + end) / 2;
+                // 섹터 중앙 라벨 배치
+                const midRad = startRad + sweepRad / 2;
+                const isWide = sweepRad >= 0.42;
+                const textR = isWide ? outerR * 0.56 : outerR * 0.72;
+                const tx = cx + textR * Math.cos(midRad);
+                const ty = cy + textR * Math.sin(midRad);
+
+                ctx.save();
+                ctx.translate(tx, ty);
+                let rot = midRad + Math.PI / 2;
+                if (rot > Math.PI / 2 && rot < (Math.PI * 3) / 2) {
+                    rot += Math.PI;
+                }
+                if (sweepRad < 0.35) {
+                    ctx.rotate(rot);
+                }
                 ctx.fillStyle = '#0f172a';
-                ctx.font = 'bold 11px "Noto Sans KR", sans-serif';
+                ctx.font = sweepRad < 0.24 ? 'bold 10.5px "Noto Sans KR", sans-serif' : 'bold 13px "Noto Sans KR", sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(p.activity.slice(0, 8), cx + (r * 0.58) * Math.cos(mid), cy + (r * 0.58) * Math.sin(mid));
+                ctx.textBaseline = 'middle';
+                ctx.fillText(p.activity, 0, 0);
+                ctx.restore();
             });
-        }
 
-        function addPlanEntry() {
-            const time = document.getElementById('plan-time-input').value.trim();
-            const activity = document.getElementById('plan-activity-input').value.trim();
-            if (!time || !activity) {
-                showToast('시간과 활동을 모두 입력해 주세요.');
-                return;
+            // 24시간 외곽 눈금 (30분 단위·1시간 단위) 및 0~23시 숫자
+            for (let m = 0; m < 1440; m += 30) {
+                const isHour = m % 60 === 0;
+                const rad = minutesTo24hAngleRad(m);
+                const rStart = outerR;
+                const rEnd = isHour ? outerR + 7 : outerR + 4;
+                ctx.beginPath();
+                ctx.moveTo(cx + rStart * Math.cos(rad), cy + rStart * Math.sin(rad));
+                ctx.lineTo(cx + rEnd * Math.cos(rad), cy + rEnd * Math.sin(rad));
+                ctx.lineWidth = isHour ? 2 : 1;
+                ctx.strokeStyle = isHour ? '#1e293b' : '#94a3b8';
+                ctx.stroke();
             }
-            const palette = ['#fde68a', '#bfdbfe', '#bbf7d0', '#ddd6fe', '#fbcfe8', '#fed7aa'];
-            state.plans.push({
-                id: `p_${Date.now()}`,
-                time,
-                activity,
-                color: palette[state.plans.length % palette.length]
-            });
-            document.getElementById('plan-time-input').value = '';
-            document.getElementById('plan-activity-input').value = '';
-            saveState();
-            renderPlanEntries();
-        }
 
-        function resetPlanEntries() {
-            state.plans = [...DEFAULT_PLANS];
-            saveState();
-            renderPlanEntries();
+            for (let h = 0; h < 24; h++) {
+                const rad = minutesTo24hAngleRad(h * 60);
+                const nx = cx + labelRingR * Math.cos(rad);
+                const ny = cy + labelRingR * Math.sin(rad);
+                ctx.fillStyle = h === 0 ? '#0f172a' : '#1e293b';
+                ctx.font = h === 0 ? '900 14px "Noto Sans KR", sans-serif' : '700 12.5px "Noto Sans KR", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(String(h), nx, ny);
+            }
+
+            // 원형 외곽선 & 중심점
+            ctx.beginPath();
+            ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#0f172a';
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fill();
+
+            ctx.restore();
         }
 
         function renderAll() {
