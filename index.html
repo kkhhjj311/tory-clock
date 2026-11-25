@@ -2227,19 +2227,35 @@
 
             ctx.clearRect(0, 0, logicalSize, logicalSize);
 
-            // 빈 24시간 원판 바탕
             ctx.beginPath();
             ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
             ctx.fillStyle = '#f8fafc';
             ctx.fill();
 
-            // 각 계획 섹터 그리기 (자정 넘김 처리 포함)
+            const fitTextToWidth = (text, maxW, startSize, minSize) => {
+                let size = startSize;
+                ctx.font = `bold ${size}px "Noto Sans KR", sans-serif`;
+                while (size > minSize && ctx.measureText(text).width > maxW) {
+                    size -= 0.5;
+                    ctx.font = `bold ${size}px "Noto Sans KR", sans-serif`;
+                }
+                let fitted = text;
+                if (ctx.measureText(fitted).width > maxW) {
+                    while (fitted.length > 1 && ctx.measureText(fitted + '…').width > maxW) {
+                        fitted = fitted.slice(0, -1);
+                    }
+                    fitted = fitted.length > 0 ? fitted + '…' : '';
+                }
+                return { text: fitted, size };
+            };
+
             state.plans.forEach(p => {
                 const dur = getPlanDurationMinutes(p);
                 const startRad = minutesTo24hAngleRad(p.startMinutes);
                 const sweepRad = (dur / 1440) * Math.PI * 2;
                 const endRad = startRad + sweepRad;
 
+                ctx.save();
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
                 ctx.arc(cx, cy, outerR, startRad, endRad, false);
@@ -2250,31 +2266,38 @@
                 ctx.strokeStyle = '#334155';
                 ctx.stroke();
 
-                // 섹터 중앙 라벨 배치
-                const midRad = startRad + sweepRad / 2;
-                const isWide = sweepRad >= 0.42;
-                const textR = isWide ? outerR * 0.56 : outerR * 0.72;
-                const tx = cx + textR * Math.cos(midRad);
-                const ty = cy + textR * Math.sin(midRad);
+                ctx.clip();
 
-                ctx.save();
-                ctx.translate(tx, ty);
-                let rot = midRad + Math.PI / 2;
-                if (rot > Math.PI / 2 && rot < (Math.PI * 3) / 2) {
-                    rot += Math.PI;
+                const midRad = startRad + sweepRad / 2;
+                const isWide = sweepRad >= 0.45;
+                const textR = isWide ? outerR * 0.55 : outerR * 0.72;
+                const chordWidth = Math.max(12, 2 * textR * Math.sin(Math.min(sweepRad, Math.PI) / 2) - 10);
+                const radialSpace = outerR * 0.42;
+                const maxAllowedWidth = sweepRad < 0.35 ? radialSpace : chordWidth;
+
+                const fitted = fitTextToWidth(p.activity, maxAllowedWidth, isWide ? 13 : 11, 8.5);
+                if (fitted.text) {
+                    const tx = cx + textR * Math.cos(midRad);
+                    const ty = cy + textR * Math.sin(midRad);
+
+                    ctx.translate(tx, ty);
+                    if (sweepRad < 0.38) {
+                        let rot = midRad + Math.PI / 2;
+                        if (rot > Math.PI / 2 && rot < (Math.PI * 3) / 2) {
+                            rot += Math.PI;
+                        }
+                        ctx.rotate(rot);
+                    }
+                    ctx.fillStyle = '#0f172a';
+                    ctx.font = `bold ${fitted.size}px "Noto Sans KR", sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(fitted.text, 0, 0);
                 }
-                if (sweepRad < 0.35) {
-                    ctx.rotate(rot);
-                }
-                ctx.fillStyle = '#0f172a';
-                ctx.font = sweepRad < 0.24 ? 'bold 10.5px "Noto Sans KR", sans-serif' : 'bold 13px "Noto Sans KR", sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(p.activity, 0, 0);
+
                 ctx.restore();
             });
 
-            // 24시간 외곽 눈금 (30분 단위·1시간 단위) 및 0~23시 숫자
             for (let m = 0; m < 1440; m += 30) {
                 const isHour = m % 60 === 0;
                 const rad = minutesTo24hAngleRad(m);
@@ -2299,7 +2322,6 @@
                 ctx.fillText(String(h), nx, ny);
             }
 
-            // 원형 외곽선 & 중심점
             ctx.beginPath();
             ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
             ctx.lineWidth = 2.5;
