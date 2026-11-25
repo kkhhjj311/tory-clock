@@ -21,35 +21,23 @@
             padding: 0;
         }
 
-        .clock-face {
-            position: relative;
-            box-sizing: border-box;
+        .svg-clock-wrapper {
             width: 240px;
             height: 240px;
             margin: 0 auto;
+            position: relative;
             user-select: none;
             touch-action: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .clock-face-lg {
+        .svg-clock-wrapper-lg {
             width: 270px;
             height: 270px;
         }
 
-        .clock-face-sm {
-            width: 152px;
-            height: 152px;
-        }
-
-        .precision-clock-svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-            overflow: visible;
-            filter: drop-shadow(0 10px 20px rgba(15, 23, 42, 0.12));
+        .svg-clock-wrapper-sm {
+            width: 150px;
+            height: 150px;
         }
 
         @media print {
@@ -74,7 +62,7 @@
     </div>
 
     <!-- ========================================================= -->
-    <!-- 1. 비공개 로그인 & 최초 로그인 최종관리자(1인) 등록 화면    -->
+    <!-- 1. 비공개 로그인 화면                                      -->
     <!-- ========================================================= -->
     <section id="auth-gate-screen" class="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-indigo-50 via-white to-sky-50">
         <div class="w-full max-w-lg rounded-3xl bg-white p-6 sm:p-8 shadow-xl border border-slate-200">
@@ -83,7 +71,7 @@
                     🔒 비공개 학습 워크스페이스
                 </span>
                 <span id="chief-status-badge" class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
-                    최초 로그인 시 최종관리자 등록
+                    최초 로그인 시 최종관리자(최대 2인) 등록
                 </span>
             </div>
 
@@ -91,7 +79,7 @@
                 토리쌤의 재밌게 공부하자 (시계편)
             </h1>
             <p class="text-sm text-slate-600 leading-relaxed mb-6">
-                처음 로그인하는 계정이 <strong>최종관리자(1인)</strong>로 등록됩니다. 로그인하면 바로 활동지로 이동합니다.
+                이메일과 참여 코드를 입력해 입장합니다. 최초 등록되는 최대 2인의 계정은 <strong>최종관리자</strong>로 지정됩니다.
             </p>
 
             <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
@@ -110,7 +98,7 @@
 
                 <div>
                     <label for="login-code-input" class="block text-xs font-bold text-slate-700 mb-1">
-                        참여 코드 (최초 최종관리자 등록 시 비워두거나 입력 가능)
+                        참여 코드 (최종관리자 계정은 코드 없이도 입장 가능)
                     </label>
                     <input
                         id="login-code-input"
@@ -129,7 +117,7 @@
             </form>
 
             <div id="access-denied-box" class="hidden mt-4 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs text-rose-800 font-semibold">
-                참여 코드가 일치하지 않습니다. 최종관리자에게 받은 참여 코드를 확인해 주세요.
+                참여 코드가 일치하지 않거나 이용이 제한된 계정입니다.
             </div>
         </div>
     </section>
@@ -147,10 +135,7 @@
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="font-black text-base sm:text-lg text-slate-900">토리쌤의 재밌게 공부하자 (시계편)</span>
                             <span id="current-role-badge" class="rounded-full bg-indigo-100 text-indigo-800 px-2.5 py-0.5 text-xs font-bold">
-                                최종관리자 (1인)
-                            </span>
-                            <span id="slp-verified-badge" class="hidden rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 text-xs font-bold">
-                                ✔ 언어재활사 인증됨
+                                최종관리자
                             </span>
                         </div>
                         <p id="current-user-email-display" class="text-xs text-slate-500"></p>
@@ -160,10 +145,11 @@
                 <div class="flex items-center gap-2 flex-wrap">
                     <button
                         type="button"
-                        onclick="openAdminModal()"
+                        id="header-admin-btn"
+                        onclick="requestAdminModalAccess()"
                         class="rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-800 transition cursor-pointer"
                     >
-                        ⚙ 관리자·자격 설정
+                        🔒 관리자·자격 설정
                     </button>
                     <button
                         type="button"
@@ -175,7 +161,8 @@
                     </button>
                     <button
                         type="button"
-                        onclick="window.print()"
+                        id="header-print-btn"
+                        onclick="handlePrintAction()"
                         class="rounded-xl bg-sky-600 hover:bg-sky-700 px-3.5 py-2 text-xs font-bold text-white transition cursor-pointer"
                     >
                         🖨 활동지 인쇄
@@ -303,9 +290,9 @@
                         <span class="text-xs font-bold text-slate-400"><span class="text-rose-500">━ 시침</span> · <span class="text-blue-600">━ 분침</span></span>
                     </div>
 
-                    <div id="main-analog-clock" class="clock-face clock-face-lg">
-                        <div id="main-svg-clock-slot" class="w-full h-full"></div>
-                        <canvas id="main-draw-canvas" width="240" height="240" class="absolute inset-0 w-full h-full rounded-full z-20 hidden"></canvas>
+                    <div class="svg-clock-wrapper svg-clock-wrapper-lg">
+                        <div id="main-analog-clock" class="w-full h-full"></div>
+                        <canvas id="main-draw-canvas" width="270" height="270" class="absolute inset-0 w-full h-full rounded-full z-20 hidden"></canvas>
                     </div>
 
                     <div id="draw-toolbar" class="no-print hidden mt-4 w-full rounded-2xl bg-purple-50 border border-purple-200 p-3 flex flex-wrap items-center justify-center gap-2">
@@ -415,8 +402,8 @@
             <section class="print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
                 <div class="flex flex-col items-center">
                     <div id="calc-question-prompt" class="text-xl font-black text-indigo-700 mb-4 text-center"></div>
-                    <div id="calc-analog-clock" class="clock-face">
-                        <div id="calc-svg-clock-slot" class="w-full h-full"></div>
+                    <div class="svg-clock-wrapper">
+                        <div id="calc-analog-clock" class="w-full h-full"></div>
                     </div>
                 </div>
 
@@ -490,732 +477,1162 @@
         </main>
     </div>
 
-    <!-- 관리자·권한·언어재활사 자격증 모달 -->
-    <div id="admin-modal" class="no-print fixed inset-0 z-50 hidden bg-slate-950/60 flex items-center justify-center p-4">
-        <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 space-y-6">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+    <!-- ========================================================= -->
+    <!-- 3. 관리자·자격 설정 진입 비밀번호 잠금 모달               -->
+    <!-- ========================================================= -->
+    <div id="admin-password-gate-modal" class="no-print fixed inset-0 z-50 hidden bg-slate-950/60 flex items-center justify-center p-4">
+        <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-black text-slate-900">🔐 관리자 설정 잠금 해제</h3>
+                <button type="button" onclick="closeAdminPasswordGate()" class="rounded-xl bg-slate-100 px-3 py-1 text-xs font-bold cursor-pointer">닫기</button>
+            </div>
+            <form onsubmit="verifyAdminSettingsPassword(event)" class="space-y-3">
                 <div>
-                    <h3 class="text-xl font-black text-slate-900">⚙ 최종관리자 · 관리인 권한 · 자격 확인</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">최종관리자(1인)만 참여 코드, 관리인 업무, 언어재활사 사진 승인을 변경할 수 있습니다.</p>
+                    <label for="admin-gate-pw-input" class="block text-xs font-bold text-slate-700 mb-1">설정 페이지 비밀번호</label>
+                    <input
+                        id="admin-gate-pw-input"
+                        type="password"
+                        required
+                        placeholder="비밀번호 입력"
+                        class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm font-bold focus:border-indigo-500 focus:outline-none"
+                    />
                 </div>
-                <button type="button" onclick="closeAdminModal()" class="rounded-xl bg-slate-100 px-3 py-1.5 text-sm font-bold cursor-pointer">✕</button>
+                <div id="admin-gate-error" class="hidden rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700">
+                    비밀번호가 올바르지 않습니다.
+                </div>
+                <button type="submit" class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 py-2.5 text-sm font-bold text-white cursor-pointer">
+                    확인
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 4. 관리자 · 권한 · 회원 · 보안 설정 모달                   -->
+    <!-- ========================================================= -->
+    <div id="admin-modal" class="no-print fixed inset-0 z-50 hidden bg-slate-950/60 flex items-center justify-center p-4">
+        <div class="w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-xl font-black text-slate-900">⚙ 관리자 · 권한 · 보안 설정</h3>
+                    <span id="modal-current-role-pill" class="rounded-full bg-indigo-100 text-indigo-800 px-3 py-0.5 text-xs font-extrabold">최종관리자</span>
+                </div>
+                <button type="button" onclick="closeAdminModal()" class="rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold cursor-pointer">닫기</button>
             </div>
 
-            <div class="rounded-2xl bg-indigo-50 border border-indigo-200 p-4 space-y-2">
-                <div class="text-xs font-extrabold text-indigo-900">🔐 비공개 참여 코드</div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <input id="admin-invite-code-input" type="text" value="TORY-CLOCK-2026" class="rounded-xl border border-indigo-300 bg-white px-3 py-1.5 text-sm font-bold text-indigo-900" />
-                    <button type="button" onclick="saveInviteCode()" class="rounded-xl bg-indigo-600 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">코드 저장</button>
-                </div>
-            </div>
-
+            <!-- (1) 역할별 담당 업무 & 접근 가능 / 접근 제한 분류표 -->
             <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3">
-                <div class="text-xs font-extrabold text-slate-800">👥 관리인 업무 설정</div>
-                <div id="managers-permission-list" class="space-y-2"></div>
-                <div class="flex flex-wrap gap-2 pt-1">
-                    <input id="new-manager-email" type="email" placeholder="관리인 이메일" class="flex-1 min-w-[180px] rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs" />
-                    <select id="new-manager-role" class="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold">
-                        <option value="문제·일과 관리">문제·일과 관리</option>
-                        <option value="수업 진행 전용">수업 진행 전용</option>
-                        <option value="인쇄·자료 출력">인쇄·자료 출력</option>
-                    </select>
-                    <button type="button" onclick="addManagerRole()" class="rounded-xl bg-slate-800 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">추가</button>
-                </div>
-            </div>
-
-            <div class="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 space-y-3">
-                <div class="text-xs font-extrabold text-emerald-900">🪪 언어재활사 자격 확인 (사진 첨부 → 승인/반려)</div>
-                <input id="credential-photo-input" type="file" accept="image/*" onchange="handleCredentialPhotoUpload(event)" class="text-xs" />
-                <div id="credential-review-box" class="hidden rounded-xl bg-white border border-emerald-200 p-3 space-y-3">
-                    <div class="flex items-center gap-4">
-                        <img id="credential-preview-img" src="" alt="자격증 증빙 사진" class="w-24 h-24 object-cover rounded-xl border border-slate-200" />
+                <div class="font-black text-sm text-slate-900">📋 역할별 업무 및 접근 권한 분류</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <!-- 최종관리자 -->
+                    <div class="rounded-2xl bg-white border-2 border-indigo-200 p-3.5 space-y-2">
+                        <div class="font-black text-sm text-indigo-800">👑 최종관리자 (최대 2인)</div>
                         <div class="space-y-1">
-                            <div id="credential-status-label" class="text-xs font-extrabold text-amber-700">승인 대기 중</div>
-                            <div class="text-xs text-slate-500">최종관리자가 사진을 확인한 뒤 승인 또는 반려를 눌러 주세요.</div>
+                            <div class="font-bold text-emerald-700">✔ 접근 가능</div>
+                            <ul class="list-disc pl-4 text-slate-700 space-y-0.5 font-medium">
+                                <li>문제풀이</li>
+                                <li>인쇄 가능</li>
+                                <li>참여코드 변경 및 확인</li>
+                                <li>회원 관리 및 추방 또는 정지</li>
+                                <li>관리자 설정 비밀번호 변경</li>
+                                <li>최종관리자(2인) 이메일 지정</li>
+                            </ul>
+                        </div>
+                        <div class="pt-1 border-t border-slate-100">
+                            <div class="font-bold text-slate-400">⛔ 접근 제한: 없음</div>
                         </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button type="button" onclick="setCredentialApproval('approved')" class="rounded-xl bg-emerald-600 text-white px-4 py-1.5 text-xs font-bold cursor-pointer">✔ 자격 승인</button>
-                        <button type="button" onclick="setCredentialApproval('rejected')" class="rounded-xl bg-rose-600 text-white px-4 py-1.5 text-xs font-bold cursor-pointer">✕ 반려</button>
+
+                    <!-- 관리자 -->
+                    <div class="rounded-2xl bg-white border border-sky-200 p-3.5 space-y-2">
+                        <div class="font-black text-sm text-sky-800">🛡 관리자</div>
+                        <div class="space-y-1">
+                            <div class="font-bold text-emerald-700">✔ 접근 가능</div>
+                            <ul class="list-disc pl-4 text-slate-700 space-y-0.5 font-medium">
+                                <li>참여코드 확인</li>
+                                <li>회원 관리 및 정지 또는 추방</li>
+                                <li>문제풀이</li>
+                                <li>인쇄 가능</li>
+                                <li>설정 페이지 비밀번호 열람</li>
+                            </ul>
+                        </div>
+                        <div class="pt-1 border-t border-slate-100">
+                            <div class="font-bold text-rose-600">⛔ 접근 제한</div>
+                            <ul class="list-disc pl-4 text-slate-500 space-y-0.5">
+                                <li>참여코드 변경</li>
+                                <li>관리자 설정 비밀번호 변경</li>
+                                <li>최종관리자(2인) 지정</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 일반 -->
+                    <div class="rounded-2xl bg-white border border-slate-200 p-3.5 space-y-2">
+                        <div class="font-black text-sm text-slate-800">👤 일반</div>
+                        <div class="space-y-1">
+                            <div class="font-bold text-emerald-700">✔ 접근 가능</div>
+                            <ul class="list-disc pl-4 text-slate-700 space-y-0.5 font-medium">
+                                <li>문제 풀이</li>
+                                <li>인쇄 가능</li>
+                            </ul>
+                        </div>
+                        <div class="pt-1 border-t border-slate-100">
+                            <div class="font-bold text-rose-600">⛔ 접근 제한</div>
+                            <ul class="list-disc pl-4 text-slate-500 space-y-0.5">
+                                <li>관리자 설정 페이지 접근</li>
+                                <li>참여코드 확인 및 변경</li>
+                                <li>회원 관리 및 정지·추방</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- (2) 참여 코드 & 관리자 설정 비밀번호 (관리자 열람 가능 / 최종관리자만 변경 가능) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="rounded-2xl bg-indigo-50/70 border border-indigo-200 p-4 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-sm text-indigo-950">🔑 참여 코드</span>
+                        <span id="invite-code-perm-tag" class="text-[11px] font-bold text-indigo-700">최종관리자 변경 가능</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input id="admin-invite-code-input" type="text" class="flex-1 rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm font-bold text-slate-900" />
+                        <button id="save-invite-code-btn" type="button" onclick="updateInviteCode()" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">변경</button>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl bg-amber-50/70 border border-amber-200 p-4 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-sm text-amber-950">🔐 관리자 설정 비밀번호</span>
+                        <span id="settings-pw-perm-tag" class="text-[11px] font-bold text-amber-800">최종관리자 변경 가능</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input id="admin-settings-pw-input" type="text" class="flex-1 rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm font-bold text-slate-900" />
+                        <button id="save-settings-pw-btn" type="button" onclick="updateAdminSettingsPassword()" class="rounded-xl bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">변경</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- (3) 최종관리자 2인 이메일 설정 (최종관리자 전용) -->
+            <div id="chief-admin-slot-section" class="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div class="font-black text-sm text-slate-900">👑 최종관리자 지정 (최대 2인 · 이메일 형식)</div>
+                    <span id="chief-admin-lock-note" class="text-xs font-bold text-indigo-700">최종관리자만 수정 가능</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">최종관리자 1 (이메일)</label>
+                        <input id="chief-email-1" type="email" placeholder="chief1@example.com" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">최종관리자 2 (이메일)</label>
+                        <input id="chief-email-2" type="email" placeholder="chief2@example.com" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold" />
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button id="save-chief-emails-btn" type="button" onclick="saveChiefAdminEmails()" class="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
+                        최종관리자 2인 저장
+                    </button>
+                </div>
+            </div>
+
+            <!-- (4) 회원 관리 · 역할 지정 · 정지 및 추방 (최종관리자 & 관리자) -->
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+                <div class="font-black text-sm text-slate-900">👥 회원 관리 (역할 부여 · 정지 · 추방)</div>
+                <div class="flex flex-wrap gap-2">
+                    <input id="new-member-email" type="email" placeholder="회원 이메일 입력 (예: user@example.com)" class="flex-1 min-w-[200px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold" />
+                    <select id="new-member-role" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-800">
+                        <option value="general">일반</option>
+                        <option value="admin">관리자</option>
+                    </select>
+                    <button type="button" onclick="addOrUpdateMemberRole()" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-xs font-bold cursor-pointer">
+                        등록 / 역할 변경
+                    </button>
+                </div>
+                <ul id="members-list-ul" class="space-y-2 text-xs"></ul>
             </div>
         </div>
     </div>
 
     <script>
-        const state = {
-            hour: 3,
-            minute: 15,
+        const STORAGE_KEY = 'tory_clock_workspace_v4';
+
+        // 역할 상수: 'chief' (최종관리자), 'admin' (관리자), 'general' (일반)
+        const ROLE_LABELS = {
+            chief: '최종관리자',
+            admin: '관리자',
+            general: '일반'
+        };
+
+        const DEFAULT_ROUTINES = [
+            { id: 'r1', title: '기상 및 아침 인사하기', hour: 7, minute: 30 },
+            { id: 'r2', title: '등원 및 가방 정리하기', hour: 9, minute: 0 },
+            { id: 'r3', title: '맛있는 점심 식사하기', hour: 12, minute: 10 },
+            { id: 'r4', title: '언어·시계 놀이 학습하기', hour: 15, minute: 20 },
+            { id: 'r5', title: '저녁 식사 및 양치하기', hour: 18, minute: 40 },
+            { id: 'r6', title: '잠자리 동화 듣고 취침하기', hour: 21, minute: 0 }
+        ];
+
+        const DEFAULT_PLANS = [
+            { id: 'p1', time: '07:30 ~ 08:30', activity: '아침 식사 및 준비하기', color: '#fde68a' },
+            { id: 'p2', time: '09:00 ~ 12:00', activity: '유치원·학교 즐거운 활동', color: '#bfdbfe' },
+            { id: 'p3', time: '12:00 ~ 13:00', activity: '점심 식사 및 휴식', color: '#bbf7d0' },
+            { id: 'p4', time: '15:00 ~ 16:00', activity: '토리쌤과 시계 공부하기', color: '#ddd6fe' }
+        ];
+
+        let state = {
+            chiefEmails: [], // 최대 2인 이메일
+            inviteCode: 'TORY-CLOCK-2026',
+            adminSettingsPassword: '1234',
+            currentUserEmail: '',
+            members: [], // { email, role: 'chief'|'admin'|'general', status: 'active'|'suspended'|'expelled' }
+            mainHour: 3,
+            mainMinute: 15,
             digitalHidden: false,
             drawMode: false,
             drawTool: 'hour',
-            drawnHands: { hourDeg: null, minuteDeg: null },
-            chiefAdminEmail: null,
-            currentUserEmail: '',
-            inviteCode: 'TORY-CLOCK-2026',
+            drawnHourAngle: null,
+            drawnMinuteAngle: null,
             ttsRate: 0.72,
             secondsQuizTarget: 15,
-            secondsCards: [5, 15, 30, 45],
-            managers: [
-                { email: 'co-therapist@tory-clock.kr', role: '문제·일과 관리' }
-            ],
-            credential: {
-                photoDataUrl: '',
-                status: 'none'
-            },
-            calc: {
-                baseHour: 4,
-                baseMinute: 20,
-                direction: 1,
-                delta: 15
-            },
-            routines: [
-                { title: '기상 및 아침 인사하기', hour: 7, minute: 30 },
-                { title: '학교·치료실 가기', hour: 9, minute: 0 },
-                { title: '맛있는 점심 식사', hour: 12, minute: 30 },
-                { title: '저녁 식사 및 가족과 대화', hour: 6, minute: 30 }
-            ],
-            plans: [
-                { time: '09:00 ~ 10:00', activity: '아침 시계 읽기 연습', color: '#818cf8' },
-                { time: '10:00 ~ 11:30', activity: '언어재활 활동 및 말하기', color: '#34d399' },
-                { time: '12:00 ~ 13:00', activity: '점심 식사 및 휴식', color: '#fbbf24' }
-            ],
-            matching: {
-                pairs: [],
-                selectedClockId: null,
-                matchedIds: new Set()
+            secondsPracticeItems: [5, 15, 30, 45],
+            calcBaseHour: 4,
+            calcBaseMinute: 20,
+            calcDir: 1,
+            calcDelta: 15,
+            matchingItems: [],
+            selectedClockId: null,
+            selectedLabelId: null,
+            matchedIds: [],
+            routines: [...DEFAULT_ROUTINES],
+            plans: [...DEFAULT_PLANS]
+        };
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    state = { ...state, ...parsed };
+                    if (!Array.isArray(state.chiefEmails)) state.chiefEmails = [];
+                    if (!Array.isArray(state.members)) state.members = [];
+                    if (!state.adminSettingsPassword) state.adminSettingsPassword = '1234';
+                }
+            } catch (e) {
+                console.warn('저장된 상태 불러오기 실패:', e);
             }
-        };
-
-        const KOREAN_HOURS = {
-            0: '열두', 1: '한', 2: '두', 3: '세', 4: '네', 5: '다섯',
-            6: '여섯', 7: '일곱', 8: '여덟', 9: '아홉', 10: '열', 11: '열한', 12: '열두'
-        };
-
-        function getActiveTtsRate() {
-            const parsed = Number(state.ttsRate);
-            if (!Number.isFinite(parsed) || parsed <= 0) return 0.72;
-            return Math.min(1.0, Math.max(0.45, parsed));
         }
 
-        function showToast(message) {
-            const toast = document.getElementById('global-toast');
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.warn('상태 저장 실패:', e);
+            }
+        }
+
+        function showToast(msg) {
+            const box = document.getElementById('global-toast');
             const text = document.getElementById('global-toast-text');
-            if (!toast || !text) return;
-            text.textContent = message;
-            toast.classList.remove('hidden');
+            if (!box || !text) return;
+            text.textContent = msg;
+            box.classList.remove('hidden');
             clearTimeout(window.__toastTimer);
-            window.__toastTimer = setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3000);
+            window.__toastTimer = setTimeout(() => box.classList.add('hidden'), 3200);
         }
 
-        function handleLoginSubmit(event) {
-            event.preventDefault();
-            const emailInput = document.getElementById('login-email-input');
-            const codeInput = document.getElementById('login-code-input');
-            const deniedBox = document.getElementById('access-denied-box');
-
-            const email = (emailInput && emailInput.value ? emailInput.value.trim() : '');
-            const code = (codeInput && codeInput.value ? codeInput.value.trim() : '');
-
-            if (!email) {
-                showToast('이메일 주소를 입력해 주세요.');
-                return;
-            }
-
-            if (!state.chiefAdminEmail) {
-                state.chiefAdminEmail = email;
-                if (deniedBox) deniedBox.classList.add('hidden');
-                enterWorkspace(email);
-                return;
-            }
-
-            if (email.toLowerCase() === state.chiefAdminEmail.toLowerCase() || code === state.inviteCode) {
-                if (deniedBox) deniedBox.classList.add('hidden');
-                enterWorkspace(email);
-            } else {
-                if (deniedBox) deniedBox.classList.remove('hidden');
-                showToast('참여 코드가 일치하지 않습니다.');
-            }
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
 
-        function enterWorkspace(email) {
-            state.currentUserEmail = email;
-            document.getElementById('auth-gate-screen').classList.add('hidden');
-            document.getElementById('app-main-shell').classList.remove('hidden');
-            updateUserHeaderBadges();
-            updateTtsSpeedButton();
-            renderAllModes();
-            showToast('토리쌤의 재밌게 공부하자 (시계편)에 접속했습니다.');
+        function getUserRole(email) {
+            const norm = (email || '').trim().toLowerCase();
+            if (!norm) return 'general';
+            if (state.chiefEmails.some(e => e.toLowerCase() === norm)) return 'chief';
+            const found = state.members.find(m => m.email.toLowerCase() === norm);
+            return found ? found.role : 'general';
         }
 
-        function logoutToGate() {
-            document.getElementById('app-main-shell').classList.add('hidden');
-            document.getElementById('auth-gate-screen').classList.remove('hidden');
+        function getUserStatus(email) {
+            const norm = (email || '').trim().toLowerCase();
+            if (state.chiefEmails.some(e => e.toLowerCase() === norm)) return 'active';
+            const found = state.members.find(m => m.email.toLowerCase() === norm);
+            return found ? (found.status || 'active') : 'active';
         }
 
-        function updateUserHeaderBadges() {
-            const emailDisp = document.getElementById('current-user-email-display');
-            const roleBadge = document.getElementById('current-role-badge');
-            const slpBadge = document.getElementById('slp-verified-badge');
-            const chiefStatus = document.getElementById('chief-status-badge');
+        function syncChiefMembersList() {
+            state.chiefEmails = state.chiefEmails
+                .map(e => e.trim().toLowerCase())
+                .filter((e, idx, arr) => isValidEmail(e) && arr.indexOf(e) === idx)
+                .slice(0, 2);
 
-            if (emailDisp) emailDisp.textContent = state.currentUserEmail;
-
-            const isChief = state.currentUserEmail && state.chiefAdminEmail &&
-                state.currentUserEmail.toLowerCase() === state.chiefAdminEmail.toLowerCase();
-
-            if (roleBadge) {
-                roleBadge.textContent = isChief ? '최종관리자 (1인)' : '참여 관리인';
-            }
-            if (chiefStatus && state.chiefAdminEmail) {
-                chiefStatus.textContent = `최종관리자: ${state.chiefAdminEmail}`;
-            }
-            if (slpBadge) {
-                slpBadge.classList.toggle('hidden', state.credential.status !== 'approved');
-            }
-        }
-
-        function switchMode(modeNum) {
-            document.querySelectorAll('.mode-panel').forEach((el) => el.classList.add('hidden'));
-            const activePanel = document.getElementById(`mode-panel-${modeNum}`);
-            if (activePanel) activePanel.classList.remove('hidden');
-
-            document.querySelectorAll('.mode-tab').forEach((btn, idx) => {
-                if (idx + 1 === modeNum) {
-                    btn.className = 'mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow cursor-pointer';
-                } else {
-                    btn.className = 'mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer';
+            // 기존 chief 표시가 빠진 멤버 정리
+            state.members.forEach(m => {
+                if (m.role === 'chief' && !state.chiefEmails.includes(m.email.toLowerCase())) {
+                    m.role = 'general';
                 }
             });
 
-            updateTtsSpeedButton();
-
-            if (modeNum === 2) renderMode2Guides();
-            if (modeNum === 3) renderCalcMode();
-            if (modeNum === 4) initMatchingGame();
-            if (modeNum === 5) renderRoutineMode();
-            if (modeNum === 6) renderPlanMode();
+            // chiefEmails는 항상 members 목록에도 active chief로 유지
+            state.chiefEmails.forEach(ce => {
+                const existing = state.members.find(m => m.email.toLowerCase() === ce);
+                if (existing) {
+                    existing.role = 'chief';
+                    existing.status = 'active';
+                } else {
+                    state.members.unshift({ email: ce, role: 'chief', status: 'active' });
+                }
+            });
         }
 
-        function renderAllModes() {
-            updateMainClockUI();
-            renderMode2Guides();
-            renderCalcMode();
-            initMatchingGame();
-            renderRoutineMode();
-            renderPlanMode();
+        function updateAuthScreenBadge() {
+            const badge = document.getElementById('chief-status-badge');
+            if (!badge) return;
+            if (state.chiefEmails.length === 0) {
+                badge.textContent = '최초 로그인 시 최종관리자(최대 2인) 등록';
+            } else if (state.chiefEmails.length === 1) {
+                badge.textContent = `최종관리자 1인 등록됨 (추가 1인 가능)`;
+            } else {
+                badge.textContent = `최종관리자 2인 등록 완료`;
+            }
         }
 
-        /**
-         * 통합 정밀 SVG 시계 생성기 (viewBox="0 0 240 240", 중심 (120, 120))
-         * - 외곽 테두리 원: r=112, stroke-width=8 (내부 반지름 108)
-         * - 60개 분/초 눈금: r=96 ~ 105 (테두리 안쪽에 엄격히 배치)
-         * - 1~12 숫자: r=78 (눈금 안쪽에 겹침 없이 정중앙 정렬)
-         * - 시침·분침·초침: 정확한 각도와 삼각함수 좌표(120 + len*sin, 120 - len*cos)로 계산
-         */
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('login-email-input').value.trim().toLowerCase();
+            const codeInput = document.getElementById('login-code-input').value.trim();
+            const deniedBox = document.getElementById('access-denied-box');
+
+            if (!isValidEmail(emailInput)) {
+                showToast('올바른 이메일 형식을 입력해 주세요.');
+                return;
+            }
+
+            // 정지 또는 추방 여부 확인
+            const status = getUserStatus(emailInput);
+            if (status === 'suspended') {
+                deniedBox.textContent = '정지된 계정입니다. 관리자 또는 최종관리자에게 문의해 주세요.';
+                deniedBox.classList.remove('hidden');
+                return;
+            }
+            if (status === 'expelled') {
+                deniedBox.textContent = '추방된 계정입니다. 접근할 수 없습니다.';
+                deniedBox.classList.remove('hidden');
+                return;
+            }
+
+            // 최초 최종관리자 2인 자동 등록 (비어 있을 때 참여 코드 없이 최초 1인은 즉시 등록)
+            if (state.chiefEmails.length === 0) {
+                state.chiefEmails.push(emailInput);
+                if (codeInput) state.inviteCode = codeInput;
+                syncChiefMembersList();
+                saveState();
+            } else if (
+                state.chiefEmails.length < 2 &&
+                !state.chiefEmails.includes(emailInput) &&
+                codeInput === state.inviteCode
+            ) {
+                // 두 번째 인원이 올바른 참여 코드로 최초 입장 시 최종관리자 2인으로 등록
+                state.chiefEmails.push(emailInput);
+                syncChiefMembersList();
+                saveState();
+            } else {
+                const isChief = state.chiefEmails.includes(emailInput);
+                if (!isChief && codeInput !== state.inviteCode) {
+                    deniedBox.textContent = '참여 코드가 일치하지 않습니다. 관리자 또는 최종관리자에게 코드를 확인해 주세요.';
+                    deniedBox.classList.remove('hidden');
+                    return;
+                }
+            }
+
+            // 회원 명단에 없으면 일반(general)으로 등록
+            if (!state.members.some(m => m.email.toLowerCase() === emailInput)) {
+                const assignedRole = state.chiefEmails.includes(emailInput) ? 'chief' : 'general';
+                state.members.push({ email: emailInput, role: assignedRole, status: 'active' });
+            }
+
+            syncChiefMembersList();
+            deniedBox.classList.add('hidden');
+            state.currentUserEmail = emailInput;
+            saveState();
+            enterMainWorkspace();
+        }
+
+        function enterMainWorkspace() {
+            document.getElementById('auth-gate-screen').classList.add('hidden');
+            document.getElementById('app-main-shell').classList.remove('hidden');
+
+            const role = getUserRole(state.currentUserEmail);
+            const roleBadge = document.getElementById('current-role-badge');
+            const adminBtn = document.getElementById('header-admin-btn');
+
+            roleBadge.textContent = ROLE_LABELS[role] || '일반';
+            if (role === 'chief') {
+                roleBadge.className = 'rounded-full bg-indigo-100 text-indigo-800 px-2.5 py-0.5 text-xs font-bold';
+            } else if (role === 'admin') {
+                roleBadge.className = 'rounded-full bg-sky-100 text-sky-800 px-2.5 py-0.5 text-xs font-bold';
+            } else {
+                roleBadge.className = 'rounded-full bg-slate-200 text-slate-700 px-2.5 py-0.5 text-xs font-bold';
+            }
+
+            // 일반 회원은 설정 버튼 잠금 표시
+            if (role === 'general') {
+                adminBtn.classList.add('opacity-50');
+                adminBtn.title = '일반 회원은 관리자 설정에 접근할 수 없습니다.';
+            } else {
+                adminBtn.classList.remove('opacity-50');
+                adminBtn.title = '비밀번호 입력 후 관리자 설정 열기';
+            }
+
+            document.getElementById('current-user-email-display').textContent = state.currentUserEmail;
+            updateTtsButtonLabel();
+            renderAll();
+        }
+
+        function logoutToGate() {
+            state.currentUserEmail = '';
+            saveState();
+            document.getElementById('app-main-shell').classList.add('hidden');
+            document.getElementById('auth-gate-screen').classList.remove('hidden');
+            updateAuthScreenBadge();
+        }
+
+        function handlePrintAction() {
+            const role = getUserRole(state.currentUserEmail);
+            const status = getUserStatus(state.currentUserEmail);
+            if (status !== 'active') {
+                showToast('이용이 제한된 계정입니다.');
+                return;
+            }
+            // 최종관리자, 관리자, 일반 모두 인쇄 가능
+            if (role === 'chief' || role === 'admin' || role === 'general') {
+                window.print();
+            }
+        }
+
+        // =========================================================
+        // 관리자 설정 비밀번호 잠금 & 권한별 화면 제어
+        // =========================================================
+        function requestAdminModalAccess() {
+            const role = getUserRole(state.currentUserEmail);
+            if (role === 'general') {
+                showToast('일반 회원은 관리자 설정 페이지에 접근할 수 없습니다.');
+                return;
+            }
+            document.getElementById('admin-gate-pw-input').value = '';
+            document.getElementById('admin-gate-error').classList.add('hidden');
+            document.getElementById('admin-password-gate-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('admin-gate-pw-input').focus(), 50);
+        }
+
+        function closeAdminPasswordGate() {
+            document.getElementById('admin-password-gate-modal').classList.add('hidden');
+        }
+
+        function verifyAdminSettingsPassword(e) {
+            e.preventDefault();
+            const role = getUserRole(state.currentUserEmail);
+            if (role === 'general') {
+                closeAdminPasswordGate();
+                showToast('접근 권한이 없습니다.');
+                return;
+            }
+
+            const entered = document.getElementById('admin-gate-pw-input').value;
+            if (entered !== state.adminSettingsPassword) {
+                document.getElementById('admin-gate-error').classList.remove('hidden');
+                return;
+            }
+
+            closeAdminPasswordGate();
+            openAdminModal();
+        }
+
+        function openAdminModal() {
+            const role = getUserRole(state.currentUserEmail);
+            if (role === 'general') {
+                showToast('일반 회원은 관리자 설정에 접근할 수 없습니다.');
+                return;
+            }
+
+            const isChief = role === 'chief';
+            document.getElementById('modal-current-role-pill').textContent = ROLE_LABELS[role];
+
+            // 참여 코드: 관리자는 확인(읽기전용), 최종관리자는 변경 가능
+            const inviteInput = document.getElementById('admin-invite-code-input');
+            const inviteBtn = document.getElementById('save-invite-code-btn');
+            const inviteTag = document.getElementById('invite-code-perm-tag');
+            inviteInput.value = state.inviteCode;
+            inviteInput.readOnly = !isChief;
+            inviteInput.classList.toggle('bg-slate-100', !isChief);
+            inviteBtn.classList.toggle('hidden', !isChief);
+            inviteTag.textContent = isChief ? '최종관리자 변경 가능' : '관리자 확인 전용 (변경 불가)';
+
+            // 설정 페이지 비밀번호: 관리자는 열람 가능, 최종관리자만 변경 가능
+            const pwInput = document.getElementById('admin-settings-pw-input');
+            const pwBtn = document.getElementById('save-settings-pw-btn');
+            const pwTag = document.getElementById('settings-pw-perm-tag');
+            pwInput.value = state.adminSettingsPassword;
+            pwInput.readOnly = !isChief;
+            pwInput.classList.toggle('bg-slate-100', !isChief);
+            pwBtn.classList.toggle('hidden', !isChief);
+            pwTag.textContent = isChief ? '최종관리자 변경 가능' : '관리자 열람 전용 (변경 불가)';
+
+            // 최종관리자 2인 이메일 설정: 최종관리자만 수정 가능
+            const chief1 = document.getElementById('chief-email-1');
+            const chief2 = document.getElementById('chief-email-2');
+            const saveChiefBtn = document.getElementById('save-chief-emails-btn');
+            const chiefNote = document.getElementById('chief-admin-lock-note');
+
+            chief1.value = state.chiefEmails[0] || '';
+            chief2.value = state.chiefEmails[1] || '';
+            chief1.disabled = !isChief;
+            chief2.disabled = !isChief;
+            saveChiefBtn.classList.toggle('hidden', !isChief);
+            chiefNote.textContent = isChief ? '이메일 형식으로 최대 2인까지 지정 가능' : '최종관리자 전용 설정 (수정 불가)';
+
+            renderMembersList();
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        function updateInviteCode() {
+            if (getUserRole(state.currentUserEmail) !== 'chief') {
+                showToast('참여 코드 변경은 최종관리자만 가능합니다.');
+                return;
+            }
+            const nextCode = document.getElementById('admin-invite-code-input').value.trim();
+            if (!nextCode) {
+                showToast('새 참여 코드를 입력해 주세요.');
+                return;
+            }
+            state.inviteCode = nextCode;
+            saveState();
+            showToast('참여 코드가 변경되었습니다.');
+        }
+
+        function updateAdminSettingsPassword() {
+            if (getUserRole(state.currentUserEmail) !== 'chief') {
+                showToast('설정 비밀번호 변경은 최종관리자만 가능합니다.');
+                return;
+            }
+            const nextPw = document.getElementById('admin-settings-pw-input').value.trim();
+            if (!nextPw) {
+                showToast('새 비밀번호를 입력해 주세요.');
+                return;
+            }
+            state.adminSettingsPassword = nextPw;
+            saveState();
+            showToast('관리자 설정 비밀번호가 변경되었습니다.');
+        }
+
+        function saveChiefAdminEmails() {
+            if (getUserRole(state.currentUserEmail) !== 'chief') {
+                showToast('최종관리자 지정은 최종관리자만 가능합니다.');
+                return;
+            }
+
+            const e1 = document.getElementById('chief-email-1').value.trim().toLowerCase();
+            const e2 = document.getElementById('chief-email-2').value.trim().toLowerCase();
+
+            if (!e1 || !isValidEmail(e1)) {
+                showToast('최종관리자 1의 이메일 형식이 올바르지 않습니다.');
+                return;
+            }
+            if (e2 && !isValidEmail(e2)) {
+                showToast('최종관리자 2의 이메일 형식이 올바르지 않습니다.');
+                return;
+            }
+            if (e2 && e1 === e2) {
+                showToast('서로 다른 이메일 주소 2개를 입력해 주세요.');
+                return;
+            }
+
+            state.chiefEmails = e2 ? [e1, e2] : [e1];
+            syncChiefMembersList();
+            saveState();
+            renderMembersList();
+            updateAuthScreenBadge();
+            enterMainWorkspace();
+            showToast('최종관리자(최대 2인) 설정이 저장되었습니다.');
+        }
+
+        function addOrUpdateMemberRole() {
+            const currentRole = getUserRole(state.currentUserEmail);
+            if (currentRole !== 'chief' && currentRole !== 'admin') {
+                showToast('회원 관리 권한이 없습니다.');
+                return;
+            }
+
+            const email = document.getElementById('new-member-email').value.trim().toLowerCase();
+            const targetRole = document.getElementById('new-member-role').value;
+
+            if (!isValidEmail(email)) {
+                showToast('올바른 이메일 형식을 입력해 주세요.');
+                return;
+            }
+            if (state.chiefEmails.includes(email)) {
+                showToast('최종관리자 계정은 위 최종관리자 설정 칸에서 관리합니다.');
+                return;
+            }
+
+            const existing = state.members.find(m => m.email.toLowerCase() === email);
+            if (existing) {
+                existing.role = targetRole;
+                existing.status = 'active';
+            } else {
+                state.members.push({ email, role: targetRole, status: 'active' });
+            }
+
+            document.getElementById('new-member-email').value = '';
+            saveState();
+            renderMembersList();
+            showToast(`${email} 계정이 ${ROLE_LABELS[targetRole]}(으)로 설정되었습니다.`);
+        }
+
+        function setMemberStatus(email, nextStatus) {
+            const currentRole = getUserRole(state.currentUserEmail);
+            if (currentRole !== 'chief' && currentRole !== 'admin') {
+                showToast('회원 상태 변경 권한이 없습니다.');
+                return;
+            }
+            if (state.chiefEmails.includes(email.toLowerCase())) {
+                showToast('최종관리자 계정은 정지하거나 추방할 수 없습니다.');
+                return;
+            }
+
+            const target = state.members.find(m => m.email.toLowerCase() === email.toLowerCase());
+            if (!target) return;
+
+            target.status = nextStatus;
+            saveState();
+            renderMembersList();
+
+            const statusLabels = { active: '정상 활성화', suspended: '정지', expelled: '추방' };
+            showToast(`${email} 회원이 '${statusLabels[nextStatus]}' 처리되었습니다.`);
+        }
+
+        function toggleMemberRole(email) {
+            const currentRole = getUserRole(state.currentUserEmail);
+            if (currentRole !== 'chief' && currentRole !== 'admin') return;
+            if (state.chiefEmails.includes(email.toLowerCase())) return;
+
+            const target = state.members.find(m => m.email.toLowerCase() === email.toLowerCase());
+            if (!target) return;
+
+            target.role = target.role === 'admin' ? 'general' : 'admin';
+            saveState();
+            renderMembersList();
+            showToast(`${email} 역할이 '${ROLE_LABELS[target.role]}'(으)로 변경되었습니다.`);
+        }
+
+        function renderMembersList() {
+            const ul = document.getElementById('members-list-ul');
+            if (!ul) return;
+
+            if (state.members.length === 0) {
+                ul.innerHTML = `<li class="text-slate-400">등록된 회원이 없습니다.</li>`;
+                return;
+            }
+
+            ul.innerHTML = state.members.map(m => {
+                const isChief = state.chiefEmails.includes(m.email.toLowerCase());
+                const roleLabel = isChief ? '최종관리자' : (ROLE_LABELS[m.role] || '일반');
+                const roleBadgeClass = isChief
+                    ? 'bg-indigo-100 text-indigo-800'
+                    : m.role === 'admin'
+                    ? 'bg-sky-100 text-sky-800'
+                    : 'bg-slate-200 text-slate-700';
+
+                const status = m.status || 'active';
+                const statusBadge =
+                    status === 'suspended'
+                        ? `<span class="rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 font-bold">정지됨</span>`
+                        : status === 'expelled'
+                        ? `<span class="rounded-full bg-rose-100 text-rose-800 px-2 py-0.5 font-bold">추방됨</span>`
+                        : `<span class="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 font-bold">정상</span>`;
+
+                const actionsHtml = isChief
+                    ? `<span class="text-slate-400 font-bold">보호됨</span>`
+                    : `
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <button type="button" onclick="toggleMemberRole('${m.email}')" class="rounded-lg bg-slate-100 hover:bg-slate-200 px-2.5 py-1 font-bold text-slate-700 cursor-pointer">
+                                ${m.role === 'admin' ? '일반으로 변경' : '관리자로 변경'}
+                            </button>
+                            ${status !== 'active' ? `<button type="button" onclick="setMemberStatus('${m.email}', 'active')" class="rounded-lg bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 font-bold text-emerald-800 cursor-pointer">해제</button>` : ''}
+                            ${status !== 'suspended' ? `<button type="button" onclick="setMemberStatus('${m.email}', 'suspended')" class="rounded-lg bg-amber-100 hover:bg-amber-200 px-2.5 py-1 font-bold text-amber-800 cursor-pointer">정지</button>` : ''}
+                            ${status !== 'expelled' ? `<button type="button" onclick="setMemberStatus('${m.email}', 'expelled')" class="rounded-lg bg-rose-100 hover:bg-rose-200 px-2.5 py-1 font-bold text-rose-800 cursor-pointer">추방</button>` : ''}
+                        </div>
+                    `;
+
+                return `
+                    <li class="flex flex-wrap items-center justify-between gap-2 bg-white px-3.5 py-2.5 rounded-xl border border-slate-200">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-bold text-slate-800">${m.email}</span>
+                            <span class="rounded-full px-2.5 py-0.5 font-bold ${roleBadgeClass}">${roleLabel}</span>
+                            ${statusBadge}
+                        </div>
+                        ${actionsHtml}
+                    </li>
+                `;
+            }).join('');
+        }
+
+        // =========================================================
+        // TTS 속도 & 또박또박 발음 (모든 활동 일괄 적용)
+        // =========================================================
+        function updateTtsButtonLabel() {
+            const btn = document.getElementById('tts-speed-toggle-btn');
+            if (!btn) return;
+            btn.textContent = state.ttsRate <= 0.65 ? '🐢 말하기 : 더 천천히' : '🐢 말하기 : 천천히';
+        }
+
+        function toggleTtsSpeed() {
+            if (state.ttsRate > 0.65) {
+                state.ttsRate = 0.58;
+                updateTtsButtonLabel();
+                saveState();
+                speakText('더 천천히 말해요');
+            } else {
+                state.ttsRate = 0.72;
+                updateTtsButtonLabel();
+                saveState();
+                speakText('천천히 말해요');
+            }
+        }
+
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) {
+                showToast('이 브라우저에서는 음성 합성을 지원하지 않습니다.');
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const currentRate = Number(state.ttsRate) || 0.72;
+            const cleanPhrase = String(text)
+                .replace(/\s+/g, ' ')
+                .replace(/시\s+/g, '시, ')
+                .replace(/분\s+/g, '분, ')
+                .trim();
+
+            const utter = new SpeechSynthesisUtterance(cleanPhrase);
+            utter.lang = 'ko-KR';
+            utter.rate = currentRate;
+            utter.pitch = 1.05;
+
+            const voices = window.speechSynthesis.getVoices();
+            const koVoice = voices.find(v => v.lang && v.lang.toLowerCase().includes('ko'));
+            if (koVoice) utter.voice = koVoice;
+
+            utter.onstart = () => {
+                utter.rate = currentRate;
+            };
+            window.speechSynthesis.speak(utter);
+        }
+
+        // =========================================================
+        // 정밀 SVG 아날로그 시계 생성기 (중심점 · 눈금 · 숫자 완벽 일치)
+        // =========================================================
         function createPrecisionClockSVG({
             hour = 12,
             minute = 0,
             second = null,
             showHourHand = true,
             showMinuteHand = true,
-            showSecondHand = false,
-            hideHands = false,
-            compact = false
-        } = {}) {
+            showSecondHand = false
+        }) {
             const cx = 120;
             const cy = 120;
-            const uid = `clk-${Math.random().toString(36).slice(2, 8)}`;
+            const outerR = 112;
+            const h12 = ((hour % 12) + 12) % 12;
 
-            let ticksMarkup = '';
-            let numbersMarkup = '';
+            const secVal = second !== null ? second : 0;
+            const secAngleDeg = secVal * 6;
+            const minAngleDeg = minute * 6 + (showSecondHand ? secVal * 0.1 : 0);
+            const hourAngleDeg = h12 * 30 + minute * 0.5;
 
+            let ticksSvg = '';
             for (let i = 0; i < 60; i++) {
-                const deg = i * 6;
-                const rad = (deg * Math.PI) / 180;
                 const isMajor = i % 5 === 0;
-                const outerR = 105;
-                const innerR = isMajor ? 94 : 99;
-
-                const x1 = (cx + innerR * Math.sin(rad)).toFixed(2);
-                const y1 = (cy - innerR * Math.cos(rad)).toFixed(2);
-                const x2 = (cx + outerR * Math.sin(rad)).toFixed(2);
-                const y2 = (cy - outerR * Math.cos(rad)).toFixed(2);
-
-                ticksMarkup += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isMajor ? '#1e293b' : '#94a3b8'}" stroke-width="${isMajor ? (compact ? '3' : '2.6') : (compact ? '1.6' : '1.3')}" stroke-linecap="round" />`;
-
-                if (isMajor) {
-                    const num = i === 0 ? 12 : i / 5;
-                    const numR = 77;
-                    const nx = (cx + numR * Math.sin(rad)).toFixed(2);
-                    const ny = (cy - numR * Math.cos(rad)).toFixed(2);
-                    const fontSize = compact ? 18 : 16;
-                    numbersMarkup += `<text x="${nx}" y="${ny}" fill="#0f172a" font-size="${fontSize}" font-weight="900" font-family="'Noto Sans KR', sans-serif" text-anchor="middle" dominant-baseline="central">${num}</text>`;
-                }
+                const rad = (i * 6 - 90) * (Math.PI / 180);
+                const rInner = isMajor ? 94 : 99;
+                const rOuter = 105;
+                const x1 = (cx + rInner * Math.cos(rad)).toFixed(2);
+                const y1 = (cy + rInner * Math.sin(rad)).toFixed(2);
+                const x2 = (cx + rOuter * Math.cos(rad)).toFixed(2);
+                const y2 = (cy + rOuter * Math.sin(rad)).toFixed(2);
+                ticksSvg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isMajor ? '#1e293b' : '#94a3b8'}" stroke-width="${isMajor ? '3.2' : '1.6'}" stroke-linecap="round" />`;
             }
 
-            const { hourAngle, minuteAngle, secondAngle } = getHandAngles(hour, minute, second || 0);
-            let handsMarkup = '';
-
-            if (!hideHands) {
-                if (showHourHand) {
-                    const hLen = 54;
-                    const hRad = (hourAngle * Math.PI) / 180;
-                    const hx = (cx + hLen * Math.sin(hRad)).toFixed(2);
-                    const hy = (cy - hLen * Math.cos(hRad)).toFixed(2);
-                    handsMarkup += `<line x1="${cx}" y1="${cy}" x2="${hx}" y2="${hy}" stroke="#ef4444" stroke-width="${compact ? '8' : '7.5'}" stroke-linecap="round" />`;
-                }
-
-                if (showMinuteHand) {
-                    const mLen = 82;
-                    const mRad = (minuteAngle * Math.PI) / 180;
-                    const mx = (cx + mLen * Math.sin(mRad)).toFixed(2);
-                    const my = (cy - mLen * Math.cos(mRad)).toFixed(2);
-                    handsMarkup += `<line x1="${cx}" y1="${cy}" x2="${mx}" y2="${my}" stroke="#2563eb" stroke-width="${compact ? '5.5' : '5'}" stroke-linecap="round" />`;
-                }
-
-                if (showSecondHand && second !== null) {
-                    const sLen = 91;
-                    const sTail = 16;
-                    const sRad = (secondAngle * Math.PI) / 180;
-                    const sx1 = (cx - sTail * Math.sin(sRad)).toFixed(2);
-                    const sy1 = (cy + sTail * Math.cos(sRad)).toFixed(2);
-                    const sx2 = (cx + sLen * Math.sin(sRad)).toFixed(2);
-                    const sy2 = (cy - sLen * Math.cos(sRad)).toFixed(2);
-                    handsMarkup += `<line x1="${sx1}" y1="${sy1}" x2="${sx2}" y2="${sy2}" stroke="#10b981" stroke-width="${compact ? '4' : '3.5'}" stroke-linecap="round" />`;
-                }
+            let numbersSvg = '';
+            const numRadius = 77;
+            for (let n = 1; n <= 12; n++) {
+                const rad = (n * 30 - 90) * (Math.PI / 180);
+                const nx = (cx + numRadius * Math.cos(rad)).toFixed(2);
+                const ny = (cy + numRadius * Math.sin(rad)).toFixed(2);
+                numbersSvg += `<text x="${nx}" y="${ny}" text-anchor="middle" dominant-baseline="central" fill="#0f172a" font-size="18" font-weight="900" font-family="Noto Sans KR, sans-serif">${n}</text>`;
             }
 
-            const capFill = showSecondHand && !showHourHand && !showMinuteHand ? '#065f46' : '#0f172a';
+            const polarPoint = (angleDeg, length) => {
+                const rad = (angleDeg - 90) * (Math.PI / 180);
+                return {
+                    x: (cx + length * Math.cos(rad)).toFixed(2),
+                    y: (cy + length * Math.sin(rad)).toFixed(2)
+                };
+            };
+
+            let handsSvg = '';
+            if (showHourHand) {
+                const hEnd = polarPoint(hourAngleDeg, 54);
+                handsSvg += `<line x1="${cx}" y1="${cy}" x2="${hEnd.x}" y2="${hEnd.y}" stroke="#ef4444" stroke-width="7.5" stroke-linecap="round" />`;
+            }
+            if (showMinuteHand) {
+                const mEnd = polarPoint(minAngleDeg, 84);
+                handsSvg += `<line x1="${cx}" y1="${cy}" x2="${mEnd.x}" y2="${mEnd.y}" stroke="#2563eb" stroke-width="4.8" stroke-linecap="round" />`;
+            }
+            if (showSecondHand) {
+                const sEnd = polarPoint(secAngleDeg, 93);
+                const sTail = polarPoint(secAngleDeg + 180, 18);
+                handsSvg += `<line x1="${sTail.x}" y1="${sTail.y}" x2="${sEnd.x}" y2="${sEnd.y}" stroke="#10b981" stroke-width="2.6" stroke-linecap="round" />`;
+            }
 
             return `
-                <svg viewBox="0 0 240 240" class="precision-clock-svg" role="img" aria-label="아날로그 시계">
+                <svg viewBox="0 0 240 240" class="w-full h-full block">
                     <defs>
-                        <radialGradient id="dial-grad-${uid}" cx="50%" cy="50%" r="50%">
+                        <radialGradient id="dialGrad" cx="50%" cy="50%" r="50%">
                             <stop offset="68%" stop-color="#ffffff" />
                             <stop offset="100%" stop-color="#f1f5f9" />
                         </radialGradient>
                     </defs>
-                    <circle cx="120" cy="120" r="112" fill="url(#dial-grad-${uid})" stroke="#1e293b" stroke-width="8" />
-                    <circle cx="120" cy="120" r="107.5" fill="none" stroke="#e2e8f0" stroke-width="1" />
-                    ${ticksMarkup}
-                    ${numbersMarkup}
-                    ${handsMarkup}
-                    <circle cx="120" cy="120" r="7.5" fill="${capFill}" stroke="#ffffff" stroke-width="2.5" />
+                    <circle cx="${cx}" cy="${cy}" r="${outerR}" fill="url(#dialGrad)" stroke="#1e293b" stroke-width="8" />
+                    ${ticksSvg}
+                    ${numbersSvg}
+                    ${handsSvg}
+                    <circle cx="${cx}" cy="${cy}" r="7.5" fill="#0f172a" stroke="#ffffff" stroke-width="2.5" />
                 </svg>
             `;
         }
 
-        function getHandAngles(hour, minute, second = 0) {
-            const h12 = ((hour % 12) + 12) % 12;
-            const safeMin = ((minute % 60) + 60) % 60;
-            const safeSec = ((second % 60) + 60) % 60;
-            const hourAngle = (h12 + safeMin / 60 + safeSec / 3600) * 30;
-            const minuteAngle = (safeMin + safeSec / 60) * 6;
-            const secondAngle = safeSec * 6;
-            return { hourAngle, minuteAngle, secondAngle };
+        // =========================================================
+        // 한국어 시각 읽기 유틸
+        // =========================================================
+        const KOREAN_HOURS = ['열두', '한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열', '열한'];
+        const SINO_ONES = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+        const SINO_TENS = ['', '십', '이십', '삼십', '사십', '오십'];
+
+        function numberToSinoKorean(n) {
+            if (n === 0) return '영';
+            const t = Math.floor(n / 10);
+            const o = n % 10;
+            return `${SINO_TENS[t]}${SINO_ONES[o]}`;
         }
 
-        function formatKoreanTimePhrase(hour, minute) {
-            const h12 = ((hour % 12) + 12) % 12;
-            const hText = `${KOREAN_HOURS[h12]} 시`;
-            if (minute === 0) return `${hText} 정각`;
-            return `${hText} ${minute} 분`;
+        function formatKoreanTimeSpeech(h24, m) {
+            const h12 = ((h24 % 12) + 12) % 12;
+            const hourWord = `${KOREAN_HOURS[h12]} 시`;
+            if (m === 0) return `${hourWord} 정각`;
+            return `${hourWord} ${numberToSinoKorean(m)} 분`;
+        }
+
+        function formatNumericTimeSpeech(h24, m) {
+            const h12 = ((h24 % 12) + 12) % 12 || 12;
+            if (m === 0) return `${h12}시 정각이에요`;
+            return `${h12}시 ${m}분이에요`;
+        }
+
+        // =========================================================
+        // 모드 전환
+        // =========================================================
+        function switchMode(modeNum) {
+            document.querySelectorAll('.mode-panel').forEach((el, idx) => {
+                el.classList.toggle('hidden', idx + 1 !== modeNum);
+            });
+            document.querySelectorAll('.mode-tab').forEach((btn, idx) => {
+                const active = idx + 1 === modeNum;
+                btn.className = active
+                    ? 'mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow cursor-pointer'
+                    : 'mode-tab shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer';
+            });
+        }
+
+        // =========================================================
+        // 모드 1: 시계 읽기·그리기·말하기
+        // =========================================================
+        function renderMainClock() {
+            const h = state.mainHour;
+            const m = state.mainMinute;
+            const h12 = ((h % 12) + 12) % 12 || 12;
+
+            document.getElementById('input-hour').value = h;
+            document.getElementById('input-minute').value = m;
+            document.getElementById('digital-hour-text').textContent = String(h12).padStart(2, '0');
+            document.getElementById('digital-minute-text').textContent = String(m).padStart(2, '0');
+            document.getElementById('korean-time-phrase').textContent = formatKoreanTimeSpeech(h, m);
+
+            const container = document.getElementById('main-analog-clock');
+            container.innerHTML = createPrecisionClockSVG({
+                hour: h,
+                minute: m,
+                showHourHand: !state.drawMode,
+                showMinuteHand: !state.drawMode,
+                showSecondHand: false
+            });
+
+            document.getElementById('digital-clock-display').classList.toggle('hidden', state.digitalHidden);
+            document.getElementById('digital-hidden-placeholder').classList.toggle('hidden', !state.digitalHidden);
         }
 
         function syncTimeFromInputs() {
-            const hEl = document.getElementById('input-hour');
-            const mEl = document.getElementById('input-minute');
-            let h = parseInt(hEl.value, 10);
-            let m = parseInt(mEl.value, 10);
-            if (Number.isNaN(h)) h = 0;
-            if (Number.isNaN(m)) m = 0;
-            state.hour = ((h % 24) + 24) % 24;
-            state.minute = ((m % 60) + 60) % 60;
-            updateMainClockUI();
+            const h = Math.max(0, Math.min(23, parseInt(document.getElementById('input-hour').value || '0', 10)));
+            const m = Math.max(0, Math.min(59, parseInt(document.getElementById('input-minute').value || '0', 10)));
+            state.mainHour = h;
+            state.mainMinute = m;
+            saveState();
+            renderMainClock();
         }
 
         function stepMinutes(delta) {
-            let total = state.hour * 60 + state.minute + delta;
-            total = ((total % 1440) + 1440) % 1440;
-            state.hour = Math.floor(total / 60);
-            state.minute = total % 60;
-            updateMainClockUI();
+            let total = ((state.mainHour % 12) * 60 + state.mainMinute + delta) % 720;
+            if (total < 0) total += 720;
+            state.mainHour = Math.floor(total / 60) || 12;
+            state.mainMinute = total % 60;
+            saveState();
+            renderMainClock();
         }
 
         function randomizeMainClock() {
-            state.hour = Math.floor(Math.random() * 12) + 1;
-            state.minute = Math.floor(Math.random() * 12) * 5;
-            updateMainClockUI();
-            showToast(`새 문제: ${formatKoreanTimePhrase(state.hour, state.minute)}`);
+            state.mainHour = Math.floor(Math.random() * 12) + 1;
+            state.mainMinute = Math.floor(Math.random() * 12) * 5;
+            clearDrawnHands();
+            saveState();
+            renderMainClock();
+        }
+
+        function speakCurrentMainTime() {
+            speakText(formatKoreanTimeSpeech(state.mainHour, state.mainMinute));
         }
 
         function toggleDigitalHidden() {
             state.digitalHidden = !state.digitalHidden;
-            updateMainClockUI();
-        }
-
-        function updateMainClockUI() {
-            const hInput = document.getElementById('input-hour');
-            const mInput = document.getElementById('input-minute');
-            if (hInput) hInput.value = state.hour;
-            if (mInput) mInput.value = state.minute;
-
-            const dHour = document.getElementById('digital-hour-text');
-            const dMin = document.getElementById('digital-minute-text');
-            const dBox = document.getElementById('digital-clock-display');
-            const dPlaceholder = document.getElementById('digital-hidden-placeholder');
-
-            if (dHour) dHour.textContent = String(state.hour).padStart(2, '0');
-            if (dMin) dMin.textContent = String(state.minute).padStart(2, '0');
-
-            if (state.digitalHidden) {
-                if (dBox) dBox.classList.add('hidden');
-                if (dPlaceholder) dPlaceholder.classList.remove('hidden');
-            } else {
-                if (dBox) dBox.classList.remove('hidden');
-                if (dPlaceholder) dPlaceholder.classList.add('hidden');
-            }
-
-            const mainSlot = document.getElementById('main-svg-clock-slot');
-            if (mainSlot) {
-                mainSlot.innerHTML = createPrecisionClockSVG({
-                    hour: state.hour,
-                    minute: state.minute,
-                    hideHands: state.drawMode
-                });
-            }
-
-            const phraseEl = document.getElementById('korean-time-phrase');
-            if (phraseEl) phraseEl.textContent = formatKoreanTimePhrase(state.hour, state.minute);
-        }
-
-        function buildUtteranceForCurrentSpeed(text) {
-            const activeRate = getActiveTtsRate();
-            const articulatedText = String(text)
-                .replace(/\s+/g, ' ')
-                .replace(/([시분초])\s*/g, '$1, ')
-                .replace(/,\s*,/g, ', ')
-                .trim();
-
-            const utter = new SpeechSynthesisUtterance(articulatedText);
-            utter.lang = 'ko-KR';
-            utter.rate = activeRate;
-            utter.pitch = 1.05;
-
-            const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-            const koreanVoice = voices.find((v) => v && v.lang && v.lang.toLowerCase().startsWith('ko'));
-            if (koreanVoice) {
-                utter.voice = koreanVoice;
-            }
-            return utter;
-        }
-
-        function speakText(text) {
-            const activeRate = getActiveTtsRate();
-            if (!('speechSynthesis' in window)) {
-                showToast(`${text} (속도 ${activeRate}x)`);
-                return;
-            }
-
-            window.speechSynthesis.cancel();
-            const utter = buildUtteranceForCurrentSpeed(text);
-            utter.onstart = () => {
-                utter.rate = getActiveTtsRate();
-            };
-
-            window.speechSynthesis.speak(utter);
-            const speedLabel = activeRate <= 0.62 ? '더 천천히' : '천천히';
-            showToast(`🔊 ${text} (${speedLabel})`);
-        }
-
-        function toggleTtsSpeed() {
-            if (getActiveTtsRate() > 0.65) {
-                state.ttsRate = 0.58;
-            } else {
-                state.ttsRate = 0.72;
-            }
-            updateTtsSpeedButton();
-            const spokenGuide = getActiveTtsRate() <= 0.62 ? '더 천천히 말해요' : '천천히 말해요';
-            speakText(spokenGuide);
-        }
-
-        function updateTtsSpeedButton() {
-            const btn = document.getElementById('tts-speed-toggle-btn');
-            if (!btn) return;
-            if (getActiveTtsRate() <= 0.62) {
-                btn.textContent = '🐢 말하기 : 더 천천히';
-            } else {
-                btn.textContent = '🐢 말하기 : 천천히';
-            }
-        }
-
-        function speakCurrentMainTime() {
-            speakText(`지금 시각은 ${formatKoreanTimePhrase(state.hour, state.minute)}입니다.`);
-        }
-
-        function startSpeechGrading() {
-            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const feedbackEl = document.getElementById('speech-feedback-text');
-            if (!SpeechRec) {
-                if (feedbackEl) {
-                    feedbackEl.textContent = '이 브라우저는 음성 인식을 지원하지 않습니다. 직접 시각을 입력해 확인해 보세요.';
-                }
-                return;
-            }
-
-            const rec = new SpeechRec();
-            rec.lang = 'ko-KR';
-            rec.interimResults = false;
-            if (feedbackEl) feedbackEl.textContent = '🎤 듣고 있어요... 시각을 말해 보세요!';
-
-            rec.onresult = (event) => {
-                const spoken = event.results[0][0].transcript.trim();
-                const targetPhrase = formatKoreanTimePhrase(state.hour, state.minute);
-                const digitsTarget = `${state.hour % 12 || 12}시 ${state.minute}분`;
-                const normalizedSpoken = spoken.replace(/\s+/g, '');
-                const isCorrect =
-                    normalizedSpoken.includes(targetPhrase.replace(/\s+/g, '')) ||
-                    normalizedSpoken.includes(digitsTarget.replace(/\s+/g, '')) ||
-                    (state.minute === 0 && normalizedSpoken.includes(`${KOREAN_HOURS[state.hour % 12 || 12]}시`));
-
-                if (feedbackEl) {
-                    feedbackEl.innerHTML = isCorrect
-                        ? `<span class="text-emerald-700 font-black">🎉 정답이에요!</span> 인식된 말: "${spoken}"`
-                        : `<span class="text-rose-700 font-black">다시 한 번 말해 볼까요?</span> 인식된 말: "${spoken}" (정답: ${targetPhrase})`;
-                }
-                if (isCorrect) speakText(`정답입니다! ${targetPhrase} 맞아요.`);
-            };
-
-            rec.onerror = () => {
-                if (feedbackEl) feedbackEl.textContent = '음성을 인식하지 못했습니다. 마이크 권한을 확인하고 다시 눌러 주세요.';
-            };
-
-            rec.start();
+            saveState();
+            renderMainClock();
         }
 
         function toggleHandDrawMode() {
             state.drawMode = !state.drawMode;
             const canvas = document.getElementById('main-draw-canvas');
             const toolbar = document.getElementById('draw-toolbar');
-            if (canvas) {
-                canvas.classList.toggle('hidden', !state.drawMode);
-                canvas.width = 240;
-                canvas.height = 240;
-            }
-            if (toolbar) toolbar.classList.toggle('hidden', !state.drawMode);
-            updateMainClockUI();
-            clearDrawnHands();
+            canvas.classList.toggle('hidden', !state.drawMode);
+            toolbar.classList.toggle('hidden', !state.drawMode);
+            renderMainClock();
+            if (state.drawMode) redrawUserHandsCanvas();
         }
 
         function setDrawTool(tool) {
             state.drawTool = tool;
+            showToast(tool === 'hour' ? '빨간 시침 그리기 선택됨' : '파란 분침 그리기 선택됨');
         }
 
         function clearDrawnHands() {
-            state.drawnHands = { hourDeg: null, minuteDeg: null };
-            const canvas = document.getElementById('main-draw-canvas');
-            if (!canvas) return;
-            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            state.drawnHourAngle = null;
+            state.drawnMinuteAngle = null;
+            redrawUserHandsCanvas();
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if ('speechSynthesis' in window && typeof window.speechSynthesis.getVoices === 'function') {
-                window.speechSynthesis.getVoices();
-            }
-
+        function redrawUserHandsCanvas() {
             const canvas = document.getElementById('main-draw-canvas');
-            if (canvas) {
-                canvas.addEventListener('pointerdown', (e) => {
-                    if (!state.drawMode) return;
-                    const rect = canvas.getBoundingClientRect();
-                    const cx = rect.width / 2;
-                    const cy = rect.height / 2;
-                    const x = e.clientX - rect.left - cx;
-                    const y = e.clientY - rect.top - cy;
-                    const angleDeg = ((Math.atan2(y, x) * 180) / Math.PI + 90 + 360) % 360;
-
-                    if (state.drawTool === 'hour') {
-                        state.drawnHands.hourDeg = angleDeg;
-                        state.drawTool = 'minute';
-                    } else {
-                        state.drawnHands.minuteDeg = angleDeg;
-                    }
-                    redrawUserHands(canvas);
-                });
-            }
-        });
-
-        function redrawUserHands(canvas) {
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
 
-            if (state.drawnHands.hourDeg !== null) {
-                const rad = (state.drawnHands.hourDeg * Math.PI) / 180;
+            if (state.drawnHourAngle !== null) {
+                const rad = (state.drawnHourAngle - 90) * (Math.PI / 180);
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
-                ctx.lineTo(cx + Math.sin(rad) * 54, cy - Math.cos(rad) * 54);
+                ctx.lineTo(cx + 60 * Math.cos(rad), cy + 60 * Math.sin(rad));
                 ctx.strokeStyle = '#ef4444';
-                ctx.lineWidth = 7.5;
+                ctx.lineWidth = 8;
                 ctx.lineCap = 'round';
                 ctx.stroke();
             }
 
-            if (state.drawnHands.minuteDeg !== null) {
-                const rad = (state.drawnHands.minuteDeg * Math.PI) / 180;
+            if (state.drawnMinuteAngle !== null) {
+                const rad = (state.drawnMinuteAngle - 90) * (Math.PI / 180);
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
-                ctx.lineTo(cx + Math.sin(rad) * 82, cy - Math.cos(rad) * 82);
+                ctx.lineTo(cx + 92 * Math.cos(rad), cy + 92 * Math.sin(rad));
                 ctx.strokeStyle = '#2563eb';
                 ctx.lineWidth = 5;
                 ctx.lineCap = 'round';
                 ctx.stroke();
             }
+        }
 
-            ctx.beginPath();
-            ctx.arc(cx, cy, 6.5, 0, Math.PI * 2);
-            ctx.fillStyle = '#0f172a';
-            ctx.fill();
+        function initDrawCanvasEvents() {
+            const canvas = document.getElementById('main-draw-canvas');
+            if (!canvas) return;
+            let drawing = false;
+
+            const updateAngleFromEvent = (clientX, clientY) => {
+                const rect = canvas.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                let deg = Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI) + 90;
+                if (deg < 0) deg += 360;
+                if (state.drawTool === 'hour') state.drawnHourAngle = deg;
+                else state.drawnMinuteAngle = deg;
+                redrawUserHandsCanvas();
+            };
+
+            canvas.addEventListener('pointerdown', e => {
+                drawing = true;
+                updateAngleFromEvent(e.clientX, e.clientY);
+            });
+            canvas.addEventListener('pointermove', e => {
+                if (drawing) updateAngleFromEvent(e.clientX, e.clientY);
+            });
+            window.addEventListener('pointerup', () => {
+                drawing = false;
+            });
         }
 
         function checkDrawnHands() {
-            const canvas = document.getElementById('main-draw-canvas');
-            if (!canvas) return;
-            redrawUserHands(canvas);
+            if (state.drawnHourAngle === null || state.drawnMinuteAngle === null) {
+                showToast('시침과 분침을 모두 그려 주세요.');
+                return;
+            }
+            const h12 = ((state.mainHour % 12) + 12) % 12;
+            const targetHourAngle = h12 * 30 + state.mainMinute * 0.5;
+            const targetMinuteAngle = state.mainMinute * 6;
 
-            const { hourAngle, minuteAngle } = getHandAngles(state.hour, state.minute);
-            const ctx = canvas.getContext('2d');
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
+            const angleDiff = (a, b) => {
+                const d = Math.abs(a - b) % 360;
+                return d > 180 ? 360 - d : d;
+            };
 
-            [
-                { deg: hourAngle, len: 54, color: 'rgba(239,68,68,0.38)', w: 8 },
-                { deg: minuteAngle, len: 82, color: 'rgba(37,99,235,0.38)', w: 5.5 }
-            ].forEach((h) => {
-                const rad = (h.deg * Math.PI) / 180;
-                ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.lineTo(cx + Math.sin(rad) * h.len, cy - Math.cos(rad) * h.len);
-                ctx.strokeStyle = h.color;
-                ctx.lineWidth = h.w;
-                ctx.lineCap = 'round';
-                ctx.stroke();
-            });
+            const hourOk = angleDiff(state.drawnHourAngle, targetHourAngle) <= 18;
+            const minOk = angleDiff(state.drawnMinuteAngle, targetMinuteAngle) <= 14;
 
-            showToast(`정답 시각: ${formatKoreanTimePhrase(state.hour, state.minute)}`);
+            if (hourOk && minOk) {
+                showToast('정답이에요! 시침과 분침을 아주 정확하게 그렸어요.');
+                speakText('정답이에요! 정말 잘했어요.');
+            } else {
+                showToast('조금만 더 맞춰 볼까요? 빨간 시침과 파란 분침 위치를 확인해 보세요.');
+                speakText('조금만 더 맞춰 볼까요?');
+            }
         }
 
-        function createGuideCard(hour, minute, spokenText, digitalBadgeText) {
-            const card = document.createElement('div');
-            card.className = 'rounded-2xl bg-slate-50 border border-slate-200 p-4 flex flex-col items-center justify-between gap-3';
-
-            const clockSvg = createPrecisionClockSVG({
-                hour,
-                minute,
-                compact: true
-            });
-
-            card.innerHTML = `
-                <div class="w-full flex items-center justify-between gap-2">
-                    <span class="text-sm font-black text-slate-800">${spokenText}</span>
-                    <button type="button" onclick="speakText('${spokenText}')" class="rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-800 px-2.5 py-1 text-xs font-bold cursor-pointer">
-                        🔊 듣기
-                    </button>
-                </div>
-                <div class="clock-face clock-face-sm">
-                    ${clockSvg}
-                </div>
-                <div class="w-full text-center rounded-xl bg-slate-900 text-sky-300 py-1.5 text-base font-black tracking-wider">
-                    ${digitalBadgeText}
-                </div>
-            `;
-
-            return card;
+        function startSpeechGrading() {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const feedback = document.getElementById('speech-feedback-text');
+            if (!SpeechRec) {
+                feedback.innerHTML = '이 브라우저에서는 음성 인식을 지원하지 않습니다. <strong>🔊 음성 듣기</strong>를 이용해 주세요.';
+                return;
+            }
+            const rec = new SpeechRec();
+            rec.lang = 'ko-KR';
+            feedback.innerHTML = '🎤 듣고 있어요... 지금 시각을 또박또박 말해 보세요!';
+            rec.onresult = e => {
+                const said = e.results[0][0].transcript;
+                const expected = formatKoreanTimeSpeech(state.mainHour, state.mainMinute);
+                feedback.innerHTML = `말한 내용: <strong>"${said}"</strong> · 정답: <strong>${expected}</strong>`;
+                speakText(expected);
+            };
+            rec.onerror = () => {
+                feedback.innerHTML = '소리가 잘 들리지 않았어요. 다시 한 번 눌러 말씀해 주세요.';
+            };
+            rec.start();
         }
 
+        // =========================================================
+        // 모드 2: 시·분·초 읽는 법 & 초 읽기 전용 활동
+        // =========================================================
         function renderMode2Guides() {
             const hoursGrid = document.getElementById('guide-hours-grid');
-            if (hoursGrid) {
-                hoursGrid.innerHTML = '';
-                for (let h = 1; h <= 12; h++) {
-                    hoursGrid.appendChild(createGuideCard(h, 0, `${KOREAN_HOURS[h]} 시`, `${h}:00`));
-                }
-            }
+            const sampleHours = [1, 3, 6, 9, 10, 12];
+            hoursGrid.innerHTML = sampleHours.map(h => {
+                const label = `${KOREAN_HOURS[h % 12]} 시`;
+                return `
+                    <div class="rounded-2xl border border-slate-200 p-4 flex flex-col items-center gap-3 bg-slate-50/60">
+                        <div class="svg-clock-wrapper svg-clock-wrapper-sm">
+                            ${createPrecisionClockSVG({ hour: h, minute: 0, showHourHand: true, showMinuteHand: true })}
+                        </div>
+                        <div class="text-base font-black text-slate-900">${label} (${h}:00)</div>
+                        <button type="button" onclick="speakText('${label}')" class="no-print rounded-xl bg-indigo-600 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">🔊 듣기</button>
+                    </div>
+                `;
+            }).join('');
 
             const min5Grid = document.getElementById('guide-minutes5-grid');
-            if (min5Grid) {
-                min5Grid.innerHTML = '';
-                for (let m = 5; m <= 55; m += 5) {
-                    min5Grid.appendChild(createGuideCard(12, m, `${m} 분`, `12:${String(m).padStart(2, '0')}`));
-                }
-            }
+            const sampleMin5 = [5, 10, 15, 30, 45, 55];
+            min5Grid.innerHTML = sampleMin5.map(m => {
+                const label = `${numberToSinoKorean(m)} 분`;
+                return `
+                    <div class="rounded-2xl border border-slate-200 p-4 flex flex-col items-center gap-3 bg-slate-50/60">
+                        <div class="svg-clock-wrapper svg-clock-wrapper-sm">
+                            ${createPrecisionClockSVG({ hour: 12, minute: m, showHourHand: false, showMinuteHand: true })}
+                        </div>
+                        <div class="text-base font-black text-slate-900">${label} (${m}분)</div>
+                        <button type="button" onclick="speakText('${label}')" class="no-print rounded-xl bg-blue-600 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">🔊 듣기</button>
+                    </div>
+                `;
+            }).join('');
 
-            const extraGrid = document.getElementById('guide-minutes1-seconds-grid');
-            if (extraGrid) {
-                extraGrid.innerHTML = '';
-                const items = [
-                    { h: 1, m: 1, label: '한 시 일 분', digital: '1:01' },
-                    { h: 2, m: 7, label: '두 시 칠 분', digital: '2:07' },
-                    { h: 3, m: 30, label: '세 시 삼십 분', digital: '3:30' }
-                ];
-                items.forEach((it) => {
-                    extraGrid.appendChild(createGuideCard(it.h, it.m, it.label, it.digital));
-                });
-            }
+            const min1Grid = document.getElementById('guide-minutes1-seconds-grid');
+            const sampleMin1 = [1, 3, 7, 12, 24, 38];
+            min1Grid.innerHTML = sampleMin1.map(m => {
+                const label = `${numberToSinoKorean(m)} 분`;
+                return `
+                    <div class="rounded-2xl border border-slate-200 p-4 flex flex-col items-center gap-3 bg-slate-50/60">
+                        <div class="svg-clock-wrapper svg-clock-wrapper-sm">
+                            ${createPrecisionClockSVG({ hour: 12, minute: m, showHourHand: false, showMinuteHand: true })}
+                        </div>
+                        <div class="text-base font-black text-slate-900">${label} (${m}분)</div>
+                        <button type="button" onclick="speakText('${label}')" class="no-print rounded-xl bg-sky-600 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">🔊 듣기</button>
+                    </div>
+                `;
+            }).join('');
 
             renderSecondsPracticeSection();
         }
 
-        function createSecondsOnlyCard(secondsVal) {
-            const card = document.createElement('div');
-            card.className = 'rounded-2xl bg-white border border-emerald-200 p-4 flex flex-col items-center justify-between gap-3 shadow-2xs';
-
-            const secText = `${secondsVal}초`;
-            const clockSvg = createPrecisionClockSVG({
-                hour: 12,
-                minute: 0,
-                second: secondsVal,
-                showHourHand: false,
-                showMinuteHand: false,
-                showSecondHand: true,
-                compact: true
-            });
-
-            card.innerHTML = `
-                <div class="w-full flex items-center justify-between gap-2">
-                    <span class="rounded-full bg-emerald-100 text-emerald-900 px-2.5 py-0.5 text-xs font-extrabold">초 읽기</span>
-                    <button
-                        type="button"
-                        onclick="speakText('${secText}')"
-                        class="rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 px-2.5 py-1 text-xs font-bold cursor-pointer"
-                    >
-                        🔊 「${secText}」 듣기
-                    </button>
-                </div>
-                <div class="clock-face clock-face-sm">
-                    ${clockSvg}
-                </div>
-                <div class="w-full text-center rounded-xl bg-emerald-950 text-emerald-300 py-2 text-xl font-black tracking-wide">
-                    ${secText}
-                </div>
-            `;
-
-            return card;
+        function generateSecondsPracticeRound() {
+            const pool = [3, 5, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+            const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
+            state.secondsPracticeItems = shuffled;
+            state.secondsQuizTarget = shuffled[Math.floor(Math.random() * shuffled.length)];
+            document.getElementById('seconds-quiz-input').value = '';
+            document.getElementById('seconds-quiz-feedback').textContent = '숫자를 입력하거나 「몇 초」 듣기 버튼을 눌러 연습해 보세요.';
+            saveState();
+            renderSecondsPracticeSection();
         }
 
         function renderSecondsPracticeSection() {
             const grid = document.getElementById('seconds-practice-grid');
-            if (grid) {
-                grid.innerHTML = '';
-                state.secondsCards.forEach((sec) => {
-                    grid.appendChild(createSecondsOnlyCard(sec));
-                });
-            }
+            if (!grid) return;
+            grid.innerHTML = state.secondsPracticeItems.map(sec => {
+                const spoken = `${sec}초`;
+                return `
+                    <div class="rounded-2xl border border-emerald-200 bg-white p-4 flex flex-col items-center gap-2.5 shadow-sm">
+                        <div class="svg-clock-wrapper svg-clock-wrapper-sm">
+                            ${createPrecisionClockSVG({
+                                second: sec,
+                                showHourHand: false,
+                                showMinuteHand: false,
+                                showSecondHand: true
+                            })}
+                        </div>
+                        <div class="text-lg font-black text-emerald-700">${sec}초</div>
+                        <button type="button" onclick="speakText('${spoken}')" class="no-print rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer">
+                            🔊 ${sec}초 듣기
+                        </button>
+                    </div>
+                `;
+            }).join('');
 
             const promptEl = document.getElementById('seconds-quiz-prompt');
             if (promptEl) {
@@ -1223,40 +1640,15 @@
             }
         }
 
-        function generateSecondsPracticeRound() {
-            const presetChoices = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
-            const shuffled = [...presetChoices].sort(() => Math.random() - 0.5);
-            state.secondsCards = shuffled.slice(0, 4).sort((a, b) => a - b);
-            state.secondsQuizTarget = state.secondsCards[Math.floor(Math.random() * state.secondsCards.length)];
-
-            const inputEl = document.getElementById('seconds-quiz-input');
-            const feedbackEl = document.getElementById('seconds-quiz-feedback');
-            if (inputEl) inputEl.value = '';
-            if (feedbackEl) {
-                feedbackEl.textContent = '시나 분 없이 「몇 초」만 말해 보거나 숫자를 적어 보세요.';
-            }
-
-            renderSecondsPracticeSection();
-            speakText(`${state.secondsQuizTarget}초`);
-        }
-
         function checkSecondsQuizAnswer() {
-            const inputEl = document.getElementById('seconds-quiz-input');
-            const feedbackEl = document.getElementById('seconds-quiz-feedback');
-            if (!inputEl || !feedbackEl) return;
-
-            const userVal = parseInt(inputEl.value, 10);
-            if (Number.isNaN(userVal)) {
-                feedbackEl.innerHTML = '<span class="text-amber-700">먼저 초 숫자를 입력해 주세요.</span>';
-                return;
-            }
-
-            if (userVal === state.secondsQuizTarget) {
-                feedbackEl.innerHTML = `<span class="text-emerald-700 font-black">🎉 맞았어요! 「${state.secondsQuizTarget}초」예요.</span>`;
+            const val = parseInt(document.getElementById('seconds-quiz-input').value, 10);
+            const fb = document.getElementById('seconds-quiz-feedback');
+            if (val === state.secondsQuizTarget) {
+                fb.innerHTML = `<span class="text-emerald-700">정답이에요! ${state.secondsQuizTarget}초입니다.</span>`;
                 speakText(`${state.secondsQuizTarget}초`);
             } else {
-                feedbackEl.innerHTML = `<span class="text-rose-700 font-black">아쉬워요, 이 문제는 「${state.secondsQuizTarget}초」예요.</span>`;
-                speakText(`${state.secondsQuizTarget}초`);
+                fb.innerHTML = `<span class="text-rose-600">다시 한 번 초침 끝이 가리키는 눈금을 세어 볼까요?</span>`;
+                speakText('다시 한 번 세어 볼까요?');
             }
         }
 
@@ -1264,287 +1656,246 @@
             speakText(`${state.secondsQuizTarget}초`);
         }
 
+        // =========================================================
+        // 모드 3: 몇 분 전/후 계산하기 (TTS는 "몇 시 몇 분이에요"만 읽기)
+        // =========================================================
         function setCalcDirection(dir) {
-            state.calc.direction = dir;
-            const plusBtn = document.getElementById('calc-dir-plus');
-            const minusBtn = document.getElementById('calc-dir-minus');
-            if (plusBtn && minusBtn) {
-                if (dir === 1) {
-                    plusBtn.className = 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-indigo-600 text-white cursor-pointer';
-                    minusBtn.className = 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer';
-                } else {
-                    minusBtn.className = 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-rose-600 text-white cursor-pointer';
-                    plusBtn.className = 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer';
-                }
-            }
-        }
-
-        function applyCustomCalcProblem() {
-            const h = parseInt(document.getElementById('calc-base-hour').value, 10) || 4;
-            const m = parseInt(document.getElementById('calc-base-minute').value, 10) || 0;
-            const d = parseInt(document.getElementById('calc-delta-minutes').value, 10) || 10;
-            state.calc.baseHour = Math.min(12, Math.max(1, h));
-            state.calc.baseMinute = Math.min(59, Math.max(0, m));
-            state.calc.delta = Math.max(1, d);
-            renderCalcMode();
-        }
-
-        function generateRandomCalcProblem() {
-            state.calc.baseHour = Math.floor(Math.random() * 12) + 1;
-            state.calc.baseMinute = Math.floor(Math.random() * 12) * 5;
-            state.calc.direction = Math.random() < 0.5 ? 1 : -1;
-            state.calc.delta = (Math.floor(Math.random() * 6) + 1) * 5;
-            setCalcDirection(state.calc.direction);
-            renderCalcMode();
+            state.calcDir = dir;
+            document.getElementById('calc-dir-plus').className = dir === 1
+                ? 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-indigo-600 text-white cursor-pointer'
+                : 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer';
+            document.getElementById('calc-dir-minus').className = dir === -1
+                ? 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-indigo-600 text-white cursor-pointer'
+                : 'rounded-xl px-3.5 py-1.5 text-xs font-extrabold bg-slate-100 text-slate-700 cursor-pointer';
         }
 
         function getCalcAnswerTime() {
-            let total = (state.calc.baseHour % 12) * 60 + state.calc.baseMinute + state.calc.direction * state.calc.delta;
-            total = ((total % 720) + 720) % 720;
-            const ansHour = Math.floor(total / 60) || 12;
-            const ansMinute = total % 60;
-            return { ansHour, ansMinute };
+            let total = ((state.calcBaseHour % 12) * 60 + state.calcBaseMinute + state.calcDir * state.calcDelta) % 720;
+            if (total < 0) total += 720;
+            const ansH = Math.floor(total / 60) || 12;
+            const ansM = total % 60;
+            return { hour: ansH, minute: ansM };
         }
 
-        function renderCalcMode() {
-            const promptEl = document.getElementById('calc-question-prompt');
-            const dirLabel = state.calc.direction === 1 ? '후' : '전';
-            if (promptEl) {
-                promptEl.textContent = `${state.calc.baseHour}시 ${state.calc.baseMinute}분에서 ${state.calc.delta}분 ${dirLabel}는 몇 시 몇 분일까요?`;
-            }
+        function renderCalcProblem() {
+            const dirWord = state.calcDir === 1 ? '후' : '전';
+            document.getElementById('calc-question-prompt').textContent =
+                `${state.calcBaseHour}시 ${state.calcBaseMinute}분에서 ${state.calcDelta}분 ${dirWord}은 몇 시 몇 분일까요?`;
 
-            const calcSlot = document.getElementById('calc-svg-clock-slot');
-            if (calcSlot) {
-                calcSlot.innerHTML = createPrecisionClockSVG({
-                    hour: state.calc.baseHour,
-                    minute: state.calc.baseMinute
-                });
-            }
+            document.getElementById('calc-analog-clock').innerHTML = createPrecisionClockSVG({
+                hour: state.calcBaseHour,
+                minute: state.calcBaseMinute,
+                showHourHand: true,
+                showMinuteHand: true
+            });
+            document.getElementById('calc-result-feedback').textContent = '시와 분을 입력한 뒤 정답 확인을 눌러 보세요.';
+        }
 
-            const fb = document.getElementById('calc-result-feedback');
-            if (fb) fb.textContent = '시와 분을 입력하고 [정답 확인]을 눌러 보세요.';
+        function applyCustomCalcProblem() {
+            state.calcBaseHour = Math.max(1, Math.min(12, parseInt(document.getElementById('calc-base-hour').value || '4', 10)));
+            state.calcBaseMinute = Math.max(0, Math.min(59, parseInt(document.getElementById('calc-base-minute').value || '20', 10)));
+            state.calcDelta = Math.max(1, Math.min(120, parseInt(document.getElementById('calc-delta-minutes').value || '15', 10)));
+            saveState();
+            renderCalcProblem();
+        }
+
+        function generateRandomCalcProblem() {
+            state.calcBaseHour = Math.floor(Math.random() * 12) + 1;
+            state.calcBaseMinute = Math.floor(Math.random() * 12) * 5;
+            state.calcDir = Math.random() > 0.5 ? 1 : -1;
+            state.calcDelta = (Math.floor(Math.random() * 6) + 1) * 5;
+            document.getElementById('calc-base-hour').value = state.calcBaseHour;
+            document.getElementById('calc-base-minute').value = state.calcBaseMinute;
+            document.getElementById('calc-delta-minutes').value = state.calcDelta;
+            setCalcDirection(state.calcDir);
+            saveState();
+            renderCalcProblem();
         }
 
         function checkCalcAnswer() {
+            const ans = getCalcAnswerTime();
             const userH = parseInt(document.getElementById('calc-ans-hour').value, 10);
             const userM = parseInt(document.getElementById('calc-ans-minute').value, 10);
-            const { ansHour, ansMinute } = getCalcAnswerTime();
             const fb = document.getElementById('calc-result-feedback');
+            const spokenOnlyTime = formatNumericTimeSpeech(ans.hour, ans.minute);
 
-            if (userH === ansHour && userM === ansMinute) {
-                fb.innerHTML = `<span class="text-emerald-700">🎉 정답입니다! (${ansHour}시 ${ansMinute}분)</span>`;
-                speakText(`${ansHour}시 ${ansMinute}분이에요`);
+            if (userH === ans.hour && userM === ans.minute) {
+                fb.innerHTML = `<span class="text-emerald-700">정답은 ${ans.hour}시 ${ans.minute}분이에요.</span>`;
+                speakText(spokenOnlyTime);
             } else {
-                fb.innerHTML = `<span class="text-rose-700">정답은 ${ansHour}시 ${ansMinute}분이에요.</span>`;
+                fb.innerHTML = `<span class="text-rose-600">정답은 ${ans.hour}시 ${ans.minute}분이에요. 다시 한 번 계산해 볼까요?</span>`;
+                speakText(spokenOnlyTime);
             }
         }
 
         function speakCalcAnswer() {
-            const { ansHour, ansMinute } = getCalcAnswerTime();
-            speakText(`${ansHour}시 ${ansMinute}분이에요`);
+            const ans = getCalcAnswerTime();
+            speakText(formatNumericTimeSpeech(ans.hour, ans.minute));
         }
 
+        // =========================================================
+        // 모드 4: 시계 짝짓기
+        // =========================================================
         function initMatchingGame() {
-            const pool = [
-                { id: 'p1', h: 1, m: 0, label: '01:00 (한 시 정각)' },
-                { id: 'p2', h: 3, m: 30, label: '03:30 (세 시 삼십 분)' },
-                { id: 'p3', h: 6, m: 15, label: '06:15 (여섯 시 십오 분)' },
-                { id: 'p4', h: 9, m: 45, label: '09:45 (아홉 시 사십오 분)' }
-            ];
-            state.matching.pairs = pool;
-            state.matching.selectedClockId = null;
-            state.matching.matchedIds = new Set();
+            const items = [];
+            const used = new Set();
+            while (items.length < 4) {
+                const h = Math.floor(Math.random() * 12) + 1;
+                const m = Math.floor(Math.random() * 12) * 5;
+                const key = `${h}:${m}`;
+                if (!used.has(key)) {
+                    used.add(key);
+                    items.push({ id: `m_${items.length}`, hour: h, minute: m });
+                }
+            }
+            state.matchingItems = items;
+            state.selectedClockId = null;
+            state.selectedLabelId = null;
+            state.matchedIds = [];
+            saveState();
+            renderMatchingGame();
+        }
 
+        function renderMatchingGame() {
             const clocksCol = document.getElementById('matching-clocks-col');
             const labelsCol = document.getElementById('matching-labels-col');
+            const statusBanner = document.getElementById('matching-status-banner');
             if (!clocksCol || !labelsCol) return;
 
-            clocksCol.innerHTML = '';
-            labelsCol.innerHTML = '';
-
-            const shuffledLabels = [...pool].sort(() => Math.random() - 0.5);
-
-            pool.forEach((item) => {
-                const clockSvg = createPrecisionClockSVG({
-                    hour: item.h,
-                    minute: item.m,
-                    compact: true
-                });
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.id = `match-clock-btn-${item.id}`;
-                btn.onclick = () => selectMatchClock(item.id);
-                btn.className = 'w-full rounded-2xl bg-slate-50 hover:bg-indigo-50 border-2 border-slate-200 p-3 flex items-center gap-4 transition cursor-pointer';
-                btn.innerHTML = `
-                    <div class="clock-face clock-face-sm shrink-0">
-                        ${clockSvg}
-                    </div>
-                    <span class="text-sm font-bold text-slate-700">시계 선택</span>
+            clocksCol.innerHTML = state.matchingItems.map(item => {
+                const isMatched = state.matchedIds.includes(item.id);
+                const isSelected = state.selectedClockId === item.id;
+                return `
+                    <button type="button" onclick="selectMatchClock('${item.id}')" class="w-full rounded-2xl border-2 p-4 flex items-center justify-center transition cursor-pointer ${
+                        isMatched ? 'border-emerald-400 bg-emerald-50 opacity-75' : isSelected ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white hover:border-indigo-300'
+                    }">
+                        <div class="svg-clock-wrapper svg-clock-wrapper-sm">
+                            ${createPrecisionClockSVG({ hour: item.hour, minute: item.minute })}
+                        </div>
+                    </button>
                 `;
-                clocksCol.appendChild(btn);
-            });
+            }).join('');
 
-            shuffledLabels.forEach((item) => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.id = `match-label-btn-${item.id}`;
-                btn.onclick = () => selectMatchLabel(item.id);
-                btn.className = 'w-full rounded-2xl bg-white hover:bg-sky-50 border-2 border-slate-200 p-5 text-left text-lg font-black text-slate-800 transition cursor-pointer';
-                btn.textContent = item.label;
-                labelsCol.appendChild(btn);
-            });
+            const shuffledLabels = [...state.matchingItems].sort((a, b) => (a.hour * 60 + a.minute) - (b.hour * 60 + b.minute));
+            labelsCol.innerHTML = shuffledLabels.map(item => {
+                const isMatched = state.matchedIds.includes(item.id);
+                const isSelected = state.selectedLabelId === item.id;
+                const text = item.minute === 0 ? `${item.hour}시 정각` : `${item.hour}시 ${item.minute}분`;
+                return `
+                    <button type="button" onclick="selectMatchLabel('${item.id}')" class="w-full h-[182px] rounded-2xl border-2 p-4 flex items-center justify-center text-xl font-black transition cursor-pointer ${
+                        isMatched ? 'border-emerald-400 bg-emerald-50 text-emerald-800' : isSelected ? 'border-indigo-600 bg-indigo-50 text-indigo-900' : 'border-slate-200 bg-white text-slate-800 hover:border-indigo-300'
+                    }">
+                        ${text}
+                    </button>
+                `;
+            }).join('');
 
-            updateMatchingBanner();
+            statusBanner.textContent = state.matchedIds.length === state.matchingItems.length
+                ? '모두 짝지었어요! 정말 잘했어요!'
+                : '왼쪽 시계와 오른쪽 시각 글자를 차례대로 눌러 짝지어 보세요.';
         }
 
         function selectMatchClock(id) {
-            if (state.matching.matchedIds.has(id)) return;
-            state.matching.selectedClockId = id;
-            document.querySelectorAll('[id^="match-clock-btn-"]').forEach((el) => {
-                el.classList.remove('border-indigo-600', 'bg-indigo-50');
-            });
-            const target = document.getElementById(`match-clock-btn-${id}`);
-            if (target) target.classList.add('border-indigo-600', 'bg-indigo-50');
+            if (state.matchedIds.includes(id)) return;
+            state.selectedClockId = id;
+            tryCompleteMatch();
+            renderMatchingGame();
         }
 
-        function selectMatchLabel(labelId) {
-            if (state.matching.matchedIds.has(labelId)) return;
-            const selectedClock = state.matching.selectedClockId;
-            if (!selectedClock) {
-                showToast('먼저 왼쪽 시계를 선택해 주세요.');
-                return;
-            }
+        function selectMatchLabel(id) {
+            if (state.matchedIds.includes(id)) return;
+            state.selectedLabelId = id;
+            tryCompleteMatch();
+            renderMatchingGame();
+        }
 
-            if (selectedClock === labelId) {
-                state.matching.matchedIds.add(labelId);
-                state.matching.selectedClockId = null;
-                document.getElementById(`match-clock-btn-${labelId}`).className = 'w-full rounded-2xl bg-emerald-50 border-2 border-emerald-500 p-3 flex items-center gap-4';
-                document.getElementById(`match-label-btn-${labelId}`).className = 'w-full rounded-2xl bg-emerald-50 border-2 border-emerald-500 p-5 text-left text-lg font-black text-emerald-800';
-                speakText('짝을 잘 맞췄어요!');
+        function tryCompleteMatch() {
+            if (!state.selectedClockId || !state.selectedLabelId) return;
+            if (state.selectedClockId === state.selectedLabelId) {
+                const item = state.matchingItems.find(x => x.id === state.selectedClockId);
+                state.matchedIds.push(item.id);
+                speakText(formatNumericTimeSpeech(item.hour, item.minute));
             } else {
-                showToast('다시 한 번 짝을 찾아보세요.');
+                speakText('다시 한 번 살펴볼까요?');
             }
-            updateMatchingBanner();
+            state.selectedClockId = null;
+            state.selectedLabelId = null;
         }
 
-        function updateMatchingBanner() {
-            const banner = document.getElementById('matching-status-banner');
-            if (!banner) return;
-            const done = state.matching.matchedIds.size;
-            const total = state.matching.pairs.length;
-            banner.textContent = done === total
-                ? `🎉 모든 짝짓기를 완료했어요! (${done} / ${total})`
-                : `짝을 맞춰 보세요! (${done} / ${total} 완료)`;
+        // =========================================================
+        // 모드 5: 하루 일과 연결하기 ("몇 시 몇 분에 일과명" TTS)
+        // =========================================================
+        function renderRoutineList() {
+            const container = document.getElementById('routine-list-container');
+            if (!container) return;
+
+            container.innerHTML = state.routines.map(item => {
+                const timeText = item.minute === 0 ? `${item.hour}시` : `${item.hour}시 ${item.minute}분`;
+                const ttsSentence = `${timeText}에 ${item.title}`;
+                return `
+                    <div class="print-card rounded-3xl bg-white p-5 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-5">
+                            <div class="svg-clock-wrapper svg-clock-wrapper-sm shrink-0">
+                                ${createPrecisionClockSVG({ hour: item.hour, minute: item.minute })}
+                            </div>
+                            <div>
+                                <div class="text-sm font-extrabold text-indigo-600">${timeText}</div>
+                                <div class="text-lg font-black text-slate-900 mt-0.5">${item.title}</div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="speakText('${ttsSentence.replace(/'/g, "\\'")}')" class="no-print rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold cursor-pointer">
+                            🔊 일과 듣기
+                        </button>
+                    </div>
+                `;
+            }).join('');
         }
 
         function addCustomRoutineItem() {
-            const titleInput = document.getElementById('routine-title-input');
-            const hourInput = document.getElementById('routine-hour-input');
-            const minInput = document.getElementById('routine-minute-input');
-
-            const title = (titleInput.value || '').trim();
-            const hour = Math.min(12, Math.max(1, parseInt(hourInput.value, 10) || 1));
-            const minute = Math.min(59, Math.max(0, parseInt(minInput.value, 10) || 0));
-
+            const title = document.getElementById('routine-title-input').value.trim();
+            const hour = Math.max(1, Math.min(12, parseInt(document.getElementById('routine-hour-input').value || '2', 10)));
+            const minute = Math.max(0, Math.min(59, parseInt(document.getElementById('routine-minute-input').value || '0', 10)));
             if (!title) {
                 showToast('일과 이름을 입력해 주세요.');
                 return;
             }
-
-            state.routines.push({ title, hour, minute });
-            titleInput.value = '';
-            renderRoutineMode();
+            state.routines.push({ id: `r_${Date.now()}`, title, hour, minute });
+            document.getElementById('routine-title-input').value = '';
+            saveState();
+            renderRoutineList();
         }
 
-        function renderRoutineMode() {
-            const container = document.getElementById('routine-list-container');
-            if (!container) return;
-            container.innerHTML = '';
-
-            state.routines.forEach((item, idx) => {
-                const clockSvg = createPrecisionClockSVG({
-                    hour: item.hour,
-                    minute: item.minute,
-                    compact: true
-                });
-
-                const row = document.createElement('div');
-                row.className = 'print-card rounded-3xl bg-white p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-6';
-                row.innerHTML = `
-                    <div class="space-y-1 text-center sm:text-left">
-                        <span class="inline-block rounded-full bg-amber-100 text-amber-900 px-3 py-0.5 text-xs font-extrabold">일과 ${idx + 1}</span>
-                        <h3 class="text-2xl font-black text-slate-900">${item.title}</h3>
-                        <p class="text-sm font-bold text-indigo-700">${item.hour}시 ${String(item.minute).padStart(2, '0')}분</p>
-                    </div>
-                    <div class="flex items-center gap-5">
-                        <div class="clock-face clock-face-sm shrink-0">
-                            ${clockSvg}
+        // =========================================================
+        // 모드 6: 하루 계획표 그리기
+        // =========================================================
+        function renderPlanEntries() {
+            const list = document.getElementById('plan-entries-list');
+            if (list) {
+                list.innerHTML = state.plans.map(p => `
+                    <li class="flex items-center justify-between rounded-xl border border-slate-200 px-3.5 py-2 text-sm">
+                        <div class="flex items-center gap-2.5">
+                            <span class="inline-block w-3.5 h-3.5 rounded-full" style="background:${p.color}"></span>
+                            <span class="font-extrabold text-indigo-700">${p.time}</span>
+                            <span class="font-bold text-slate-800">${p.activity}</span>
                         </div>
-                        <button type="button" onclick="speakText('${item.hour}시 ${item.minute}분에 ${item.title}')" class="no-print rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold cursor-pointer">
-                            🔊 듣기
-                        </button>
-                    </div>
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        function addPlanEntry() {
-            const timeEl = document.getElementById('plan-time-input');
-            const actEl = document.getElementById('plan-activity-input');
-            const timeVal = (timeEl.value || '').trim() || '14:00 ~ 15:00';
-            const actVal = (actEl.value || '').trim();
-            if (!actVal) {
-                showToast('계획 내용을 입력해 주세요.');
-                return;
+                        <button type="button" onclick="speakText('${p.time} ${p.activity}')" class="no-print text-xs font-bold text-slate-500 hover:text-indigo-700 cursor-pointer">🔊</button>
+                    </li>
+                `).join('');
             }
-            const palette = ['#60a5fa', '#f472b6', '#4ade80', '#facc15', '#c084fc'];
-            const color = palette[state.plans.length % palette.length];
-            state.plans.push({ time: timeVal, activity: actVal, color });
-            timeEl.value = '';
-            actEl.value = '';
-            renderPlanMode();
+            drawSchedulePie();
         }
 
-        function resetPlanEntries() {
-            state.plans = [];
-            renderPlanMode();
-        }
-
-        function renderPlanMode() {
-            const listEl = document.getElementById('plan-entries-list');
-            if (listEl) {
-                listEl.innerHTML = '';
-                state.plans.forEach((p) => {
-                    const li = document.createElement('li');
-                    li.className = 'flex items-center gap-3 rounded-xl bg-slate-50 border border-slate-200 px-3.5 py-2.5 text-sm';
-                    li.innerHTML = `
-                        <span class="w-4 h-4 rounded-full shrink-0" style="background:${p.color}"></span>
-                        <span class="font-bold text-slate-700">${p.time}</span>
-                        <span class="font-semibold text-slate-900">${p.activity}</span>
-                    `;
-                    listEl.appendChild(li);
-                });
-            }
-
+        function drawSchedulePie() {
             const canvas = document.getElementById('schedule-pie-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
-            const r = 128;
+            const r = 124;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const count = Math.max(state.plans.length, 1);
+            const count = Math.max(1, state.plans.length);
             const sliceAngle = (Math.PI * 2) / count;
-
-            if (state.plans.length === 0) {
-                ctx.beginPath();
-                ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                ctx.fillStyle = '#f1f5f9';
-                ctx.fill();
-                return;
-            }
 
             state.plans.forEach((p, idx) => {
                 const start = -Math.PI / 2 + idx * sliceAngle;
@@ -1553,123 +1904,66 @@
                 ctx.moveTo(cx, cy);
                 ctx.arc(cx, cy, r, start, end);
                 ctx.closePath();
-                ctx.fillStyle = p.color;
+                ctx.fillStyle = p.color || '#e0e7ff';
                 ctx.fill();
-                ctx.strokeStyle = '#ffffff';
+                ctx.strokeStyle = '#334155';
                 ctx.lineWidth = 2;
                 ctx.stroke();
+
+                const mid = (start + end) / 2;
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 11px "Noto Sans KR", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(p.activity.slice(0, 8), cx + (r * 0.58) * Math.cos(mid), cy + (r * 0.58) * Math.sin(mid));
             });
         }
 
-        function openAdminModal() {
-            document.getElementById('admin-modal').classList.remove('hidden');
-            renderManagersList();
-            renderCredentialReviewBox();
-        }
-
-        function closeAdminModal() {
-            document.getElementById('admin-modal').classList.add('hidden');
-        }
-
-        function saveInviteCode() {
-            if (state.currentUserEmail !== state.chiefAdminEmail) {
-                showToast('최종관리자(1인)만 참여 코드를 변경할 수 있습니다.');
+        function addPlanEntry() {
+            const time = document.getElementById('plan-time-input').value.trim();
+            const activity = document.getElementById('plan-activity-input').value.trim();
+            if (!time || !activity) {
+                showToast('시간과 활동을 모두 입력해 주세요.');
                 return;
             }
-            const input = document.getElementById('admin-invite-code-input');
-            if (input && input.value.trim()) {
-                state.inviteCode = input.value.trim();
-                showToast('참여 코드가 저장되었습니다.');
-            }
-        }
-
-        function renderManagersList() {
-            const box = document.getElementById('managers-permission-list');
-            if (!box) return;
-            box.innerHTML = '';
-            state.managers.forEach((m, idx) => {
-                const row = document.createElement('div');
-                row.className = 'flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs';
-                row.innerHTML = `
-                    <div><strong class="text-slate-800">${m.email}</strong> · <span class="text-indigo-700 font-bold">${m.role}</span></div>
-                    <button type="button" onclick="removeManagerRole(${idx})" class="text-rose-600 font-bold cursor-pointer">삭제</button>
-                `;
-                box.appendChild(row);
+            const palette = ['#fde68a', '#bfdbfe', '#bbf7d0', '#ddd6fe', '#fbcfe8', '#fed7aa'];
+            state.plans.push({
+                id: `p_${Date.now()}`,
+                time,
+                activity,
+                color: palette[state.plans.length % palette.length]
             });
+            document.getElementById('plan-time-input').value = '';
+            document.getElementById('plan-activity-input').value = '';
+            saveState();
+            renderPlanEntries();
         }
 
-        function addManagerRole() {
-            if (state.currentUserEmail !== state.chiefAdminEmail) {
-                showToast('최종관리자(1인)만 관리인 권한을 설정할 수 있습니다.');
-                return;
+        function resetPlanEntries() {
+            state.plans = [...DEFAULT_PLANS];
+            saveState();
+            renderPlanEntries();
+        }
+
+        function renderAll() {
+            renderMainClock();
+            renderMode2Guides();
+            renderCalcProblem();
+            if (!state.matchingItems || state.matchingItems.length === 0) initMatchingGame();
+            else renderMatchingGame();
+            renderRoutineList();
+            renderPlanEntries();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            syncChiefMembersList();
+            initDrawCanvasEvents();
+            updateAuthScreenBadge();
+
+            if (state.currentUserEmail && getUserStatus(state.currentUserEmail) === 'active') {
+                enterMainWorkspace();
             }
-            const emailEl = document.getElementById('new-manager-email');
-            const roleEl = document.getElementById('new-manager-role');
-            const email = (emailEl && emailEl.value ? emailEl.value.trim() : '');
-            if (!email) {
-                showToast('관리인 이메일을 입력해 주세요.');
-                return;
-            }
-            state.managers.push({ email, role: roleEl ? roleEl.value : '문제·일과 관리' });
-            emailEl.value = '';
-            renderManagersList();
-            showToast('관리인 권한이 추가되었습니다.');
-        }
-
-        function removeManagerRole(idx) {
-            if (state.currentUserEmail !== state.chiefAdminEmail) {
-                showToast('최종관리자(1인)만 관리인 권한을 삭제할 수 있습니다.');
-                return;
-            }
-            state.managers.splice(idx, 1);
-            renderManagersList();
-        }
-
-        function handleCredentialPhotoUpload(event) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                state.credential.photoDataUrl = e.target.result;
-                state.credential.status = 'pending';
-                renderCredentialReviewBox();
-                showToast('증빙 사진이 첨부되었습니다.');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function renderCredentialReviewBox() {
-            const box = document.getElementById('credential-review-box');
-            const img = document.getElementById('credential-preview-img');
-            const label = document.getElementById('credential-status-label');
-            if (!box || !state.credential.photoDataUrl) return;
-
-            box.classList.remove('hidden');
-            if (img) img.src = state.credential.photoDataUrl;
-            if (label) {
-                if (state.credential.status === 'approved') {
-                    label.className = 'text-xs font-extrabold text-emerald-700';
-                    label.textContent = '✔ 최종관리자 승인 완료 (언어재활사 인증됨)';
-                } else if (state.credential.status === 'rejected') {
-                    label.className = 'text-xs font-extrabold text-rose-700';
-                    label.textContent = '✕ 반려됨';
-                } else {
-                    label.className = 'text-xs font-extrabold text-amber-700';
-                    label.textContent = '⏳ 최종관리자 확인 대기 중';
-                }
-            }
-        }
-
-        function setCredentialApproval(decision) {
-            if (state.currentUserEmail !== state.chiefAdminEmail) {
-                showToast('최종관리자(1인)만 자격증을 승인/반려할 수 있습니다.');
-                return;
-            }
-            state.credential.status = decision;
-            renderCredentialReviewBox();
-            updateUserHeaderBadges();
-            showToast(decision === 'approved' ? '언어재활사 자격이 승인되었습니다.' : '자격 확인이 반려되었습니다.');
-        }
+        });
     </script>
 </body>
 </html>
